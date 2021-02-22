@@ -9,6 +9,7 @@ import SignUp from '../session/SignUp.js';
 import ViewActors from '../session/ViewActors.js';
 import ComposeNote from '../notes/ComposeNote.js';
 import Feed from '../Feed.js';
+import Follow from '../Follow.js';
 
 import { store } from '../../reducer/reducer.js';
 
@@ -38,6 +39,7 @@ const Routes = () => {
                 <Route exact path="/actors" render={() => <ViewActors actors={actors} />} />
                 <Route exact path="/compose" render={() => <ComposeNote />} />
                 <Route exact path="/feed" render={() => <Feed />} />
+                <Route exact path="/follow" render={() => <Follow />} />
                 <Route render={() => <Error404 />} />
         </Switch>
     );

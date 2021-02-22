@@ -30,7 +30,26 @@ def generate_signing_string(host, request_target, method, body, date, content_ty
 
 
 
-def signed_request(host, request_target, body, actor, method='POST', content_type='application/activity+json'):
+def signed_request(actor, body, url=None, host=None, request_target=None, method='POST', content_type='application/activity+json'):
+    '''
+        Makes a signed POST request according to the HTTPS signatures specification. 
+    '''
+
+    if url is None:
+        if host is not None and request_target is not None:
+            url = 'https://' + host + request_target
+        else:
+            raise Exception('Must provide either a URL or a remote host and request target when generating a signed request.')
+
+    #TODO: Better error checking and more descriptive error message
+    if request_target is None or host is None:
+        if url is None:
+            raise Exception('Error')
+        splits = url.lstrip('http://').lstrip('https://').partition('/')
+        host = splits[0]
+        request_target = '/' + splits[2].partition('?')[0]
+
+
 
     if method != 'POST':
         raise Exception(f'Only valid HTTP method for signed_request function is POST. \'{method}\' provided.')
@@ -57,11 +76,18 @@ def signed_request(host, request_target, body, actor, method='POST', content_typ
 
     headers = {
         'user-agent': f'Vagabond/{VERSION}',
-        'host': config['domain'],
+        'host': host,
         'date': date,
         'digest': f'SHA-256={b64_digest_body}',
         'content-type': content_type,
         'signature': f'keyId="{api_url}/actors/{actor.username}#main-key",algorithm="rsa-sha256",headers="(request-target) host date digest content-type",signature="{b64_sha256_signing_string}"'
     }
 
-    return requests.post(url='https://' + host + request_target, headers=headers, data=body)
+    response = requests.post(url=url, headers=headers, data=body)
+
+    if response.status_code >= 400:
+        print(response.text)
+        raise Exception('Signed request error')
+
+    return response
+

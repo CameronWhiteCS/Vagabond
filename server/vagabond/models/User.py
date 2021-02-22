@@ -8,7 +8,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(255), nullable=False)
 
     primary_actor_id = db.Column(db.Integer, db.ForeignKey('actor.id'))
-    primary_actor = db.relationship('Actor', uselist=False, foreign_keys=[primary_actor_id])
+    primary_actor = db.relationship('Actor', foreign_keys=[primary_actor_id])
 
     def __init__(self, username, password):
         self.username = username.lower()

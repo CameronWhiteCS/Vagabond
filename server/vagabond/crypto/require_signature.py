@@ -7,8 +7,9 @@ from Crypto.Signature import pkcs1_15
 from base64 import b64decode, b64encode
 
 from vagabond.__main__ import app
-from vagabond.util import resolve_actor
+from vagabond.util import resolve_ap_object
 from vagabond.routes import error
+from vagabond.config import config
 
 
 
@@ -76,17 +77,23 @@ def construct_signing_string(headers):
 def get_public_key(key_id):
     '''
         Takes the "keyId" field of a request and
-        uses resolve-actor to fetch the public key
+        uses resolve_ap_object-actor to fetch the public key
         of the specified actor.
     '''
-    actor = resolve_actor(key_id)
+    actor = resolve_ap_object(key_id)
 
-    if not actor or not actor.get('publicKey'): return error('An error occurred while attempting to fetch the public key of the inbound actor.', 400)
+    if not actor or not actor.get('publicKey'):
+        return error('An error occurred while attempting to fetch the public key of the inbound actor.', 400)
+
     public_key_wrapper = actor.get('publicKey')
-    if public_key_wrapper.get('id') != key_id: return error('Keys don\'t match', 400)
+
+    if public_key_wrapper.get('id') != key_id:
+        return error('Keys don\'t match', 400)
+
     public_key_string = public_key_wrapper.get('publicKeyPem')
 
-    if not public_key_string: return error('Public key not found.')
+    if not public_key_string:
+        return error('Public key not found.')
 
     public_key =  RSA.importKey(bytes(public_key_string, 'utf-8'))
 
@@ -96,7 +103,7 @@ def get_public_key(key_id):
 
 def require_signature(f):
     '''
-        Decoator that requires all post requests have a valid HTTP
+        Decoator that requires all POST requests have a valid HTTP
         signature according to the RFC standard
     '''
     def wrapper(*args, **kwargs):
@@ -107,7 +114,9 @@ def require_signature(f):
         if not request.get_json():
             return error('No JSON provided.', 400)
 
-        # Both of these are essential to verifying the integrity of the message
+        if not request.get_json().get('actor'):
+            return error('Invalid request: "actor" field not provided')
+
         if 'Signature' not in request.headers or 'Digest' not in request.headers:
             return error('Authentication mechanism is missing or invalid. HTTP request must include both Signature and Digest headers.', 400)
 
@@ -117,12 +126,25 @@ def require_signature(f):
         if key_id is None or algorithm is None or headers is None or signature is None:
             return error('Authentication mechanism is missing or invalid')
 
+        # We know that the owner of the public key in the header is making the
+        # request, but we don't necessarily know they have permission to
+        # even send the message unless we verify that it's the same person!
+        try:
+            if request.get_json().get('actor') != key_id.replace('#main-key', ''):
+                return error('Could not verify that the public key matches the URL of the actor')
+        except:
+            return error('Could not verify that the public key matches the URL of the actor')
+
         # 'digest' must be present in the list of headers inside of
         # The Signature HTTP header. If it isn't, an attacker can
         # fail to provide the digest and perform actions on behalf
         # of an arbitrary actor.
-        if 'digest' not in headers or 'date' not in headers:
-            return error('Authentication mechanism is missing or invalid: either the "digest" or "date" argument was not included in the "headers" field of the "Signature" HTTP header')
+        if 'digest' not in headers or 'date' not in headers or 'host' not in headers:
+            return error('Authentication mechanism is missing or invalid: the "digest", "date", or "host" arguments were not included in the "headers" field of the "Signature" HTTP header')
+
+        # Make sure the message is intended for us:
+        if request.headers['Host'] != config['domain']:
+            return error(f'Forged request: this message was originally intended for a recipient other than {config["domain"]}')
 
         # The HTTP signatures spec supports more than just SHA-256,
         # But for simplicity's sake we only support the most common

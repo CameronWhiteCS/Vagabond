@@ -97,7 +97,6 @@ def route_signup():
 
     new_user.primary_actor_id = new_actor.id
 
-
     db.session.commit()
 
 

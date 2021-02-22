@@ -2,6 +2,9 @@
     Handles all of Vagabond's routing and
     exports numerous decorators useful for routing. 
 '''
+
+import requests
+
 from flask import make_response, request, session
 
 from cerberus import Validator
@@ -11,13 +14,14 @@ from vagabond.models import User, Actor
 from vagabond.config import config
 
 
-
-#@app.before_request
-#def log_request():
-#    app.logger.error("Request Headers %s", request.headers)
-#    app.logger.error("Request Body %s", request.data)
-#    return None
-
+'''
+@app.before_request
+def log_request():
+    app.logger.error("Request Path %s", request.path)
+    app.logger.error("Request Headers %s", request.headers)
+    app.logger.error("Request Body %s", request.data)
+    return None
+'''
 
 def error(message, code=400):
     '''
@@ -123,7 +127,7 @@ def route_webfinger():
             {
                 'rel': 'self',
                 'type': 'application/activity+json',
-                'href': f'https://{config["domain"]}/api/v1/actors/{actor.username}'
+                'href': f'{config["api_url"]}/actors/{actor.username}'
             },
             {
                 'rel': 'http://webfinger.net/rel/profile-page',
@@ -133,5 +137,25 @@ def route_webfinger():
         ]
     }
 
-
     return make_response(output, 200)
+
+
+
+@app.route('/api/v1/webfinger')
+def webfinger_federated():
+    '''
+        Used for looking actors on other servers
+        via their WebFinger interface.
+    '''
+    username = request.args.get('username')
+    hostname = request.args.get('hostname')
+    if not username or not hostname:
+        return error('Invalid request')
+
+    try:
+        response = requests.get(f'https://{hostname}/.well-known/webfinger?resource=acct:{username}@{hostname}')
+        return make_response(response.json(), 200)
+    except:
+        return error('An error occurred while attempting to look up the specified user.')
+    
+

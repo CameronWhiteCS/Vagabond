@@ -33,7 +33,8 @@ const Compose = () => {
             type: 'Note',
             content: values.content,
             published: new Date().toISOString(),
-            to: ['https://www.w3.org/ns/activitystreams#Public', `${config.apiUrl}/actors/${actorName}/followers`]
+            to: ['https://www.w3.org/ns/activitystreams#Public'],
+            cc: [`${config.apiUrl}/actors/${actorName}/followers`]
         };
         args['@context'] = 'https://www.w3.org/ns/activitystreams';
 
