@@ -1,3 +1,21 @@
+body {
+  background-color: #454545;
+}
+
+#homeBody {
+  background-color: #454545;
+  height: 100vh;
+}
+
+h1 {
+  font-family: "Kumbh Sans", sans-serif;
+  font-weight: bold;
+  font-size: 40px;
+  color: white;
+  margin-left: 5%;
+  padding-top: 40px;
+}
+
 div.vagabond-navbar {
   display: flex;
   order: 1;
@@ -27,24 +45,73 @@ div.vagabond-navbar svg.icon {
 }
 
 #container-root {
-  margin: 5px;
   display: flex;
-  order: 2;
 }
 
 #sidebar-left {
-  flex: 1;
-  padding: 10px;
+  width: 30%;
+  transition: visibility 1s ease-in-out;
 }
 
 #container-center {
-  flex: 3;
-  padding: 10px;
+  width: 40%;
 }
 
 #sidebar-right {
-  flex: 1 5;
+  width: 30%;
+}
+
+#hideBarLeft {
+  display: flex;
+  justify-content: flex-end;
+  background-color: white;
+}
+
+#hideButtonLeft {
+  border-style: none;
+  background: rgba(255, 255, 255, 0);
+  font-family: "Kumbh Sans", sans-serif;
+  font-weight: bold;
+  font-size: 30px;
+  border-top-right-radius: 13px;
+  border-bottom-right-radius: 13px;
+  color: #454545;
   padding: 10px;
+  transition: all 0.3s ease-in-out;
+}
+
+#hideButtonLeft:hover {
+  transform: scale(1.1);
+}
+
+#hideButtonRight:hover {
+  transform: scale(1.1);
+}
+
+#hideBarRight {
+  display: flex;
+  justify-content: flex-start;
+  background-color: white;
+}
+
+#hideButtonRight {
+  border-style: none;
+  background: rgba(255, 255, 255, 0);
+  font-family: "Kumbh Sans", sans-serif;
+  font-weight: bold;
+  font-size: 30px;
+  border-top-left-radius: 13px;
+  border-bottom-left-radius: 13px;
+  color: #454545;
+  padding: 10px;
+  transition: all 0.3s ease-in-out;
+}
+
+.bar {
+  background-color: white;
+  width: 100%;
+  height: 100%;
+  justify-content: center;
 }
 
 @media only screen and (min-width: 0) and (max-width: 767px) {
@@ -59,6 +126,11 @@ div.vagabond-navbar svg.icon {
 
   #sidebar-left {
     display: none;
+  }
+
+  #container-center {
+    flex: 3;
+    height: 100%;
   }
 
   #sidebar-right {
@@ -79,7 +151,7 @@ div.vagabond-navbar svg.icon {
   }
   div.vagabond-navbar .icon-bar-horizontal {
     width: 100%;
-    justify-content: space-between;
+    justify-content: space-around;
   }
   div.vagabond-navbar svg.icon {
     margin: 0;
@@ -89,27 +161,67 @@ div.vagabond-navbar svg.icon {
   display: flex;
   flex-wrap: overflow;
   flex-direction: row;
+  margin-left: auto;
+  margin-right: auto;
+  justify-content: space-between;
+  width: 92%;
 }
 #compose-note .compose-note {
   display: flex;
   flex: 6;
+  background-color: white;
+  border-style: none;
+  border-width: 0;
+  border-radius: 12px;
+  margin-right: 10px;
 }
 #compose-note .compose-note .textarea-container {
   margin: 10px;
   flex: 1;
 }
-#compose-note .btn {
-  display: block;
-  margin: 5px 10px 5px 10px;
-  height: 100%;
-  flex: 1;
-}
 #compose-note .buttons {
   flex: 1;
-  flex-direction: column;
   display: flex;
-  margin: 0;
-  padding: 0;
+  flex-direction: column;
+  justify-content: space-between;
+}
+#compose-note .post {
+  border-radius: 12px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  font-family: "Kumbh Sans", sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  color: white;
+  padding-left: 5px;
+  height: 46%;
+}
+#compose-note .draft {
+  border-radius: 12px;
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+  font-family: "Kumbh Sans", sans-serif;
+  font-weight: bold;
+  font-size: 18px;
+  color: #454545;
+  padding-left: 5px;
+  align-items: center;
+  height: 46%;
+}
+#compose-note .subIconWhite {
+  fill: white;
+  height: 30px;
+  width: 30px;
+  padding-right: 7px;
+}
+#compose-note .subIconSecondary {
+  fill: #454545;
+  stroke: white;
+  height: 30px;
+  width: 30px;
+  padding-right: 7px;
 }
 
 @media only screen and (min-width: 0) and (max-width: 991px) {
@@ -117,18 +229,23 @@ div.vagabond-navbar svg.icon {
     flex-direction: column;
   }
   #compose-note .buttons {
-    margin: 10px 5px 10px 5px;
+    width: 98%;
+    margin: 10px 0px 10px 0px;
     padding: 0px;
     flex-direction: row;
     align-items: stretch;
   }
   #compose-note .buttons .post {
     order: 2;
+    width: 49%;
     margin: 0px 0px 0px 5px;
+    justify-content: center;
   }
   #compose-note .buttons .draft {
     order: 1;
+    width: 49%;
     margin: 0px 5px 0px 0px;
+    justify-content: center;
   }
 }
 .note {
@@ -152,14 +269,14 @@ div.vagabond-navbar svg.icon {
 .icon-bar-vertical {
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
+  justify-content: space-around;
   color: #6c757d;
 }
 
 .icon-bar-horizontal {
   display: flex;
   flex-direction: row;
-  justify-content: flex-start;
+  justify-content: space-around;
   color: #6c757d;
 }
 
@@ -182,7 +299,7 @@ textarea.vagabond {
   margin: 0;
   padding: 0;
   resize: none;
-  overflow: hidden;
+  overflow: scroll;
   border: none;
   outline: none;
 }

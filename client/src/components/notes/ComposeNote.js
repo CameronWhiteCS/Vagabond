@@ -54,8 +54,6 @@ const Compose = () => {
 
     return (
         <>
-            <h1>Compose new note</h1>
-            <hr />
             <Form id="compose-note" onSubmit={formik.handleSubmit}>
                 <div className="compose-note vagabond-tile">
                     <div className="icon-bar-vertical">
@@ -70,10 +68,14 @@ const Compose = () => {
                     </div>
                 </div>
                 <div className="buttons">
-                    <Button disabled={formik.values.content.length > 1024} className="post w-100" type="submit">
-                        <Navigation /> Post
+                    <Button disabled={formik.values.content.length > 1024} className="post" type="submit">
+                        <Navigation className="subIconWhite"/> 
+                        <div>Post</div>
                     </Button>
-                    <Button disabled={formik.values.content.length > 1024} className="w-100 draft" variant="secondary"><Archive /> Draft</Button>
+                    <Button disabled={formik.values.content.length > 1024} className="draft" variant="secondary">
+                        <Archive className="subIconSecondary"/> 
+                        <div>Draft</div>
+                    </Button>
                 </div>
             </Form>
             {

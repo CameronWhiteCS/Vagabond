@@ -1,4 +1,5 @@
 import React from 'react';
+import '../../css/App.css';
 
 const TextArea = (props) => {
 
@@ -6,7 +7,7 @@ const TextArea = (props) => {
     _props.className = "vagabond " + (props.className ? props.className : "");
 
     return (
-        <textarea {..._props} >
+        <textarea{..._props} >
             {props.children}
         </textarea>
     );
