@@ -48,7 +48,7 @@ div.vagabond-navbar svg.icon {
   display: flex;
 }
 
-#sidebar-left {
+#sidebar-left, #sidebar-right {
   width: 30%;
   transition: visibility 1s ease-in-out;
 }
@@ -57,54 +57,55 @@ div.vagabond-navbar svg.icon {
   width: 40%;
 }
 
-#sidebar-right {
-  width: 30%;
-}
-
-#hideBarLeft {
-  display: flex;
-  justify-content: flex-end;
-  background-color: white;
-}
-
-#hideButtonLeft {
-  border-style: none;
-  background: rgba(255, 255, 255, 0);
-  font-family: "Kumbh Sans", sans-serif;
-  font-weight: bold;
-  font-size: 30px;
-  border-top-right-radius: 13px;
-  border-bottom-right-radius: 13px;
-  color: #454545;
-  padding: 10px;
-  transition: all 0.3s ease-in-out;
-}
-
-#hideButtonLeft:hover {
-  transform: scale(1.1);
-}
-
-#hideButtonRight:hover {
-  transform: scale(1.1);
-}
-
-#hideBarRight {
+.sidebar-top-bar {
   display: flex;
   justify-content: flex-start;
   background-color: white;
 }
 
-#hideButtonRight {
+.visibility-button {
   border-style: none;
   background: rgba(255, 255, 255, 0);
   font-family: "Kumbh Sans", sans-serif;
   font-weight: bold;
   font-size: 30px;
-  border-top-left-radius: 13px;
-  border-bottom-left-radius: 13px;
   color: #454545;
   padding: 10px;
+  /**
   transition: all 0.3s ease-in-out;
+  property shouldn't be 'all', causes strange visual bug with button
+  **/
+}
+
+#hideButtonLeft {
+  border-top-right-radius: 13px;
+  border-bottom-right-radius: 13px;
+}
+#hideButtonLeft:hover {
+  transform: scale(1.1);
+}
+
+#hideButtonRight {
+  background-color: rgba(255, 255, 255, 0);
+  font-size: 30px;
+  border-top-left-radius: 13px;
+  border-bottom-left-radius: 13px;
+}
+#hideButtonRight:hover {
+  transform: scale(1.1);
+}
+
+#hideBarLeft {
+  background: white;
+  margin-top: 0px;
+  font-size: 30px;
+  justify-content: flex-end;
+}
+
+#hideBarRight {
+  justify-content: flex-start;
+  background: white;
+  margin-top: 0px;
 }
 
 .bar {

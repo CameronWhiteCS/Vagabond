@@ -1,7 +1,6 @@
 import React from "react"
-import '../../../css/App.css'
-import Compose from '../../notes/ComposeNote.js';
-import Feed from '../../Feed.js';
+import Compose from '../notes/ComposeNote.js';
+import Feed from '../Feed.js';
 
 
 const Home = () => {
