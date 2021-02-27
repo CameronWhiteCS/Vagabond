@@ -4,7 +4,6 @@ body {
 
 #homeBody {
   background-color: #454545;
-  height: 100vh;
 }
 
 h1 {
@@ -46,15 +45,20 @@ div.vagabond-navbar svg.icon {
 
 #container-root {
   display: flex;
+  height: calc(100vh - 70px);
+  background-color: red;
 }
 
 #sidebar-left, #sidebar-right {
+  display: flex;
+  flex-direction: column;
   width: 30%;
   transition: visibility 1s ease-in-out;
 }
 
 #container-center {
   width: 40%;
+  background-color: blue;
 }
 
 .sidebar-top-bar {
@@ -109,6 +113,7 @@ div.vagabond-navbar svg.icon {
 }
 
 .bar {
+  display: flex;
   background-color: white;
   width: 100%;
   height: 100%;
@@ -288,7 +293,6 @@ div.vagabond-navbar svg.icon {
   transition-property: color;
   transition: all 250ms ease-in-out;
 }
-
 .icon:hover {
   color: #339CFE;
   transform: scale(1.1);

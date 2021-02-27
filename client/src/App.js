@@ -33,16 +33,16 @@ const App = () => {
     <>
       <NotificationModal />
       <Router>
-        <Navigation />
-        <div id="container-root">
-          <LeftBar />
-          <div id="container-center">
-            <Routes />
+          <Navigation />
+          <div id="container-root">
+            <LeftBar />
+            <div id="container-center">
+              <Routes />
+            </div>
+            <RightBar />
           </div>
-
-          <RightBar />
-        </div>
       </Router>
+      
     </>
   );
 }
