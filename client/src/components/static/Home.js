@@ -9,6 +9,25 @@ const Home = () => {
             <h1>Post</h1>
             <Compose></Compose>
             <h1>Feed</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+            <h1>Post</h1>
+
         </div>
       
     );

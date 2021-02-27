@@ -58,6 +58,7 @@ div.vagabond-navbar svg.icon {
 
 #container-center {
   width: 40%;
+  overflow-y: scroll;
   background-color: blue;
 }
 
