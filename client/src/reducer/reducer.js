@@ -7,6 +7,8 @@ const initialState = {
         actors: [],
         currentActor: {}
     },
+    showSignIn: false,
+    showSignUp: false
 };
 
 const reducer = (state = initialState, action) => {
@@ -18,21 +20,43 @@ const reducer = (state = initialState, action) => {
         });
         const newState = { ...state, notifications: newNotifications }
         return newState;
-    } else if (action.type === 'HIDE_NOTIFICATION') {
+    } 
+    else if (action.type === 'HIDE_NOTIFICATION') {
         const newNotifications = [...state.notifications];
         newNotifications.shift();
         const newState = { ...state, notifications: newNotifications }
         return newState;
-    } else if (action.type === 'SET_SESSION') {
-        
+    } 
+    else if (action.type === 'SET_SESSION') {
         return { ...state, session: action.session}
-    } else {
+    } 
+    else if (action.type === 'UPDATE_SIGNIN') {
+        return { ...state, showSignIn: action.show}
+    } 
+    else if (action.type === 'UPDATE_SIGNUP') {
+        return { ...state, showSignUp: action.show}
+    } 
+    else {
         return state;
     }
 };
 
 const store = createStore(reducer, initialState);
 store.getState();
+
+const updateSignIn = (show) => {
+    return {
+        type: 'UPDATE_SIGNIN',
+        show: show
+    };
+};
+
+const updateSignUp = (show) => {
+    return {
+        type: 'UPDATE_SIGNUP',
+        show: show
+    };
+};
 
 const createNotification = (title, message) => {
     return {
@@ -55,9 +79,6 @@ const handleError = (err) => {
         store.dispatch(createNotification('Error', 'Unknown error.'));
         console.log(err);
     }
-    
 }
 
-
-
-export { store, initialState, createNotification, hideNotification, handleError }
+export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp }

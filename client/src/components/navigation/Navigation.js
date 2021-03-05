@@ -5,14 +5,12 @@ import { ReactComponent as SignIn } from '../../icon/sign-in.svg'
 import { ReactComponent as SignOut } from '../../icon/sign-out.svg'
 import { ReactComponent as Bell } from '../../icon/bell.svg'
 import { ReactComponent as Inbox } from '../../icon/inbox.svg'
-import Logo from "./VagabondWhite.png"
-
-
+import { ReactComponent as Logo } from '/home/diego/vagabond/client/src/components/navigation/Vagabond_Logo.svg'
 //import { ReactComponent as Info } from '../../icon/info.svg'
 import { ReactComponent as Feather } from '../../icon/feather.svg'
 //import { ReactComponent as Globe } from '../../icon/globe.svg'
 
-import { initialState, store, handleError } from '../../reducer/reducer.js';
+import { initialState, store, handleError, updateSignIn } from '../../reducer/reducer.js';
 
 import { useState, useEffect } from 'react';
 
@@ -41,10 +39,14 @@ const Navigation = () => {
             .catch(handleError)
     }
 
+    const openSignIn = () => {
+        store.dispatch(updateSignIn(true));
+    }
+
     return (
         <div className="vagabond-navbar" style={{padding: '10px'}}>
             <span className="logoAndTitle">
-                <img src={Logo} width={40} height={30} alt="Vagabond Logo"/>
+                <Logo style={{width:'40px', height:'40px', color:'white'}}/>
                 <div id="vagabondTitle">Vagabond</div>
             </span>
             
@@ -81,9 +83,7 @@ const Navigation = () => {
                 }
                 {
                     !session.signedIn &&
-                    <Link to="/signin" title="Sign in">
-                        <SignIn className="icon"/>
-                    </Link>
+                    <SignIn className="icon" onClick={openSignIn}/>
                 }
                 {
                     session.signedIn &&
@@ -92,8 +92,7 @@ const Navigation = () => {
                     </Link>
                 }
             </span>
-
-        </div>
+            </div>
     );
 
 }

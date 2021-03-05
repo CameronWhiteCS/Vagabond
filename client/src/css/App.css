@@ -2,14 +2,108 @@ body {
   background-color: #454545;
 }
 
+/*=-=-=-=-=-=-=-=-=-=-=-=- SHOULD BE NEW SCSS FILE ONLY FOR POPUP-MODAL STUFF, BUT TEMPORARILY HERE*/
+.modal-dialog {
+  background-color: rgba(0, 0, 0, 0.75);
+  position: fixed;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  left: 0;
+  margin: 0;
+  min-width: 100% !important;
+  height: 100%;
+  pointer-events: all;
+}
+
+.modal-content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: 45%;
+  pointer-events: auto;
+  background-color: white;
+  background-clip: padding-box;
+  border-style: none;
+  border-radius: 30px;
+  outline: 0;
+  font-family: "Kumbh Sans", sans-serif;
+}
+.modal-content .modal-button {
+  margin-top: 20px;
+  width: 20%;
+  margin-left: auto;
+  margin-right: auto;
+  font-weight: 450;
+  color: white;
+}
+.modal-content #close {
+  font-weight: 450;
+  color: #454545;
+  border-style: none;
+  background-color: white;
+}
+.modal-content .modal-header {
+  margin-left: auto;
+  margin-right: auto;
+  padding: 1rem 0;
+  width: 80%;
+  font-weight: 450 !important;
+  margin-top: 20px;
+  color: #454545;
+}
+.modal-content .modal-header .modal-title {
+  font-weight: 450;
+}
+.modal-content .modal-body {
+  width: 80%;
+  padding: 1rem 0;
+  margin-left: auto;
+  margin-right: auto;
+}
+.modal-content Form {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+}
+.modal-content Form .form-label {
+  font-weight: 450;
+  color: #454545;
+}
+.modal-content Form .form-group {
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.modal-content Form .button-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.modal-content Form .form-control {
+  background-color: #f8f9fa;
+}
+.modal-content Form .signup-toggler {
+  color: #339CFE;
+  font-weight: normal;
+  text-decoration: underline;
+  text-decoration-color: #339CFE;
+}
+.modal-content Form .signup-toggler:hover {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+/*=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-==-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-*/
 #homeBody {
   background-color: #454545;
 }
 
 h1 {
   font-family: "Kumbh Sans", sans-serif;
-  font-weight: bold;
-  font-size: 40px;
+  font-weight: 450;
+  font-size: 30px;
   color: white;
   margin-left: 5%;
   padding-top: 40px;
@@ -24,15 +118,13 @@ div.vagabond-navbar {
   flex-wrap: wrap;
   align-content: center;
   justify-content: space-between;
-  line-height: normal;
-  padding: 10px;
 }
 div.vagabond-navbar a {
   color: white;
 }
 div.vagabond-navbar #vagabondTitle {
   font-family: "Kumbh Sans", sans-serif;
-  font-weight: bold;
+  font-weight: 450;
   font-size: 30px;
   color: white;
 }
@@ -46,7 +138,6 @@ div.vagabond-navbar svg.icon {
 #container-root {
   display: flex;
   height: calc(100vh - 70px);
-  background-color: red;
 }
 
 #sidebar-left, #sidebar-right {
@@ -59,7 +150,6 @@ div.vagabond-navbar svg.icon {
 #container-center {
   width: 40%;
   overflow-y: scroll;
-  background-color: blue;
 }
 
 .sidebar-top-bar {
@@ -72,14 +162,10 @@ div.vagabond-navbar svg.icon {
   border-style: none;
   background: rgba(255, 255, 255, 0);
   font-family: "Kumbh Sans", sans-serif;
-  font-weight: bold;
+  font-weight: 450;
   font-size: 30px;
   color: #454545;
   padding: 10px;
-  /**
-  transition: all 0.3s ease-in-out;
-  property shouldn't be 'all', causes strange visual bug with button
-  **/
 }
 
 #hideButtonLeft {
@@ -198,10 +284,10 @@ div.vagabond-navbar svg.icon {
   flex-direction: row;
   align-items: center;
   font-family: "Kumbh Sans", sans-serif;
-  font-weight: bold;
+  font-weight: 450;
   font-size: 18px;
   color: white;
-  padding-left: 5px;
+  border-style: none;
   height: 46%;
 }
 #compose-note .draft {
@@ -210,7 +296,7 @@ div.vagabond-navbar svg.icon {
   flex-direction: row;
   background-color: white;
   font-family: "Kumbh Sans", sans-serif;
-  font-weight: bold;
+  font-weight: 450;
   font-size: 18px;
   color: #454545;
   padding-left: 5px;
@@ -258,7 +344,13 @@ div.vagabond-navbar svg.icon {
 .note {
   display: flex;
   flex-direction: row;
-  margin: 10px auto 0px auto;
+  margin: 16px auto 16px auto;
+  border: 0px !important;
+  border-style: none !important;
+  background-color: white;
+  width: 92%;
+  font-size: 15px !important;
+  padding: 10px;
 }
 .note .pfp-container {
   width: 64px;

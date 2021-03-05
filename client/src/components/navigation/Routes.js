@@ -27,14 +27,11 @@ const Routes = () => {
         return <p>Test</p>
     }
 
-
     return (
         <Switch>
             <Route exact path="/" render={() => <Home />} />
             <Route exact path="/test" render={() => <Test />} />
             <Route exact path="/about" render={() => <About />} />
-            <Route exact path="/signin" render={() => <SignIn />} />
-            <Route exact path="/signup" render={() => <SignUp />} />
             <Route exact path="/actors" render={() => <ViewActors actors={actors} />} />
             <Route exact path="/compose" render={() => <ComposeNote />} />
             <Route exact path="/feed" render={() => <Feed />} />

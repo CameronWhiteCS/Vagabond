@@ -11,6 +11,7 @@ import axios from 'axios';
 
 import LeftBar from './LeftBar.js';
 import RightBar from './RightBar.js';
+import SignIn from './components/session/SignIn.js';
 
 const App = () => {
 
@@ -23,7 +24,6 @@ const App = () => {
   }, []);
 
 
-
   const barStyle = {
 
   }
@@ -32,6 +32,7 @@ const App = () => {
   return (
     <>
       <NotificationModal />
+      <SignIn />
       <Router>
           <Navigation />
           <div id="container-root">
@@ -42,7 +43,6 @@ const App = () => {
             <RightBar />
           </div>
       </Router>
-      
     </>
   );
 }

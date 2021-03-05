@@ -58,9 +58,9 @@ const Compose = () => {
             <Form id="compose-note" onSubmit={formik.handleSubmit}>
                 <div className="compose-note vagabond-tile">
                     <div className="icon-bar-vertical">
-                        <PaperClip className="icon" />
-                        <AlertTriangle className="icon" />
-                        <Eye className="icon" />
+                        <PaperClip style={{heigh:'18px',width:'18px'}} className="icon" />
+                        <AlertTriangle style={{heigh:'18px',width:'18px'}}  className="icon" />
+                        <Eye style={{heigh:'18px',width:'18px'}}  className="icon" />
                     </div>
                     <div className="textarea-container" >
                         <TextArea name="content" placeholder="What's up?" value={formik.values.content} onChange={formik.handleChange} onBlur={formik.handleBlur}>

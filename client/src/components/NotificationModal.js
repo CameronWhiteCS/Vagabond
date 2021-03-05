@@ -15,17 +15,13 @@ const NotificationModal = () => {
     }
 
     return (
-
         <Modal show={notifications.length > 0} onHide={hide}>
-            <Modal.Header closeButton>
+            <Modal.Header>
                 <Modal.Title>{notifications.length > 0 ? notifications[0].title : ''}</Modal.Title>
+                <button id="close" onClick={hide}>X</button>
             </Modal.Header>
-            <Modal.Body>{notifications.length > 0 ? notifications[0].message : ''}</Modal.Body>
-            <Modal.Footer>
-                <Button variant="primary" onClick={hide}>
-                    OK
-                </Button>
-            </Modal.Footer>
+            <Modal.Body style={{width:'80%',marginLeft:'auto',marginRight:'auto'}}>{notifications.length > 0 ? notifications[0].message : ''}</Modal.Body>
+            <Button className="modal-button" style={{marginBottom:'30px'}} variant="primary" onClick={hide}>OK</Button> 
         </Modal>
     );
 }

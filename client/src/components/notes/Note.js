@@ -10,11 +10,19 @@ const Note = (props) => {
 
     const style = {
         flex: '1 1',
-        maxWidth: '100px'
+        maxWidth: '100px',
+        fontSize: '15px'
     };
 
+
+    // Instead of placeholder on lines 33 and 34 goes this:
+    // {props.note.handle}<br />
+    // {props.note.published}
+
+    //and in 36 this {props.note.content}
+    
     return (
-        <div className="vagabond-tile note">
+        <div className="vagabond-tile note" style={{padding:'15px'}}>
             <div className="pfp-container">
                 <img src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
                      width="100%"
@@ -23,10 +31,10 @@ const Note = (props) => {
             </div>
             <div class="content">
                 <div className="handle">
-                    {props.note.handle}<br />
-                    {props.note.published}
+                    sakldnaslkdnaslkdnaslkdas<br />
+                    alksdjlaksnfklsdnflksdnfkldnsklfdlskfnlsdkfnsdklfnsdlknflksdf
                 </div>
-                    {props.note.content}
+                    asdasdasdasdasdasdasdasdadsdas
                 <div className="icon-bar-horizontal">
                     <div style={style}>
                         <Heart className="icon" />1234
