@@ -24,10 +24,8 @@ def route_get_actor_by_username(username):
 
 @app.route('/api/v1/newactor')
 @require_signin
-def route_add_new_actor(username):
+def route_add_new_actor(user):
     actor_name = request.get_json().get('actorName')
-
-    user = db.session.query(User).filter(db.func.lower(User.username) == db.func.lower(username)).first()
 
     existing_actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(actor_name)).first()
     if existing_actor is not None:
@@ -38,26 +36,25 @@ def route_add_new_actor(username):
     db.session.flush()
 
     db.session.commit()
-    
-    response = make_response(new_actor.to_dict(), 200)
-    response.headers['Content-Type'] = 'application/activity+json'
-    return response
+
+    return make_response('', 201)
 
 @app.route('/api/v1/switchactor')
 @require_signin
-def route_switch_actor(username):
-    user = db.session.query(User).filter(db.func.lower(User.username) == db.func.lower(username)).first()
+def route_switch_actor(user):
 
-    actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(username)).first()
+    actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(user.username)).first()
     if actor is None:
         return error('Actor not found', 404)
-    
-    user.primary_actor_id = actor.id
-    db.session.commit()
 
-    response = make_response(actor.to_dict(), 200)
-    response.header['Content-Type'] = 'application/activity+json'
-    return response
+    if actor.user_id == user.id:
+        user.primary_actor_id = actor.id
+        db.session.commit()
+
+        return make_response('', 200)
+        
+    else:
+        return error('User does not own actor.', 404) 
     
 @app.route('/api/v1/actors/<username>/following')
 def route_get_actor_following(username):
