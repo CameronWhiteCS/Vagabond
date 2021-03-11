@@ -61,8 +61,8 @@ def create_note(actor, note):
     db.session.add(new_note)
     db.session.flush()
     new_note.attribute_to(actor)
-    new_note.set_to(request.get_json().get('to'))
-    new_note.set_cc(request.get_json().get('cc'))
+    new_note.add_all_recipients(note)
+
 
     #Create activity
     new_activity = Create()
@@ -71,8 +71,7 @@ def create_note(actor, note):
     db.session.add(new_activity)
     db.session.flush()
     new_activity.attribute_to(actor)
-    new_activity.set_to(request.get_json().get('to'))
-    new_activity.set_cc(request.get_json().get('cc'))
+    new_activity.add_all_recipients(note)
 
     db.session.commit()
 
@@ -105,7 +104,7 @@ def follow(actor, follow_activity):
     db.session.add(new_activity)
     db.session.flush()
 
-    new_follow = Following(actor.id, leader['id'])
+    new_follow = Following(actor.id, leader['id'], leader['followers'])
     db.session.add(new_follow)
 
     response = signed_request(actor, new_activity.to_dict(), leader['inbox'])

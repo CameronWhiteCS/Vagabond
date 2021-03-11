@@ -7,50 +7,32 @@ from vagabond.util import xsd_datetime
 from vagabond.models import APObjectType
 
 
-class APObjectTo(db.Model):
-
-    id = db.Column(db.Integer, primary_key=True)
-    to = db.Column(db.String(256), nullable=False)
-    ap_object_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
-    ap_object = db.relationship('APObject', backref='to')
-
-    def __init__(self, ap_object_id, to):
-        self.ap_object_id = ap_object_id
-        self.to = to
-
-
-class APObjectBto(db.Model):
+class APObjectRecipient(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
-    bto = db.Column(db.String(256), nullable=False)
     ap_object_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
-    ap_object = db.relationship('APObject', backref='bto')
+    method = db.Column(db.String(3), nullable=False)
+    recipient = db.Column(db.String(256), nullable=False)
 
-    def __init__(self, ap_object_id, bto):
+    ap_object = db.relationship('APObject', backref='recipients')
+
+    def __init__(self, ap_object_id, method, recipient):
         self.ap_object_id = ap_object_id
-        self.bto = bto
+        self.method = method
+        self.recipient = recipient
 
 
-class APObjectCc(db.Model):
+class APObjectInbox(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    cc = db.Column(db.String(256), nullable=False)
     ap_object_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
-    ap_object = db.relationship('APObject', backref='cc')
+    actor_id = db.Column(db.Integer, db.ForeignKey('actor.id'), nullable=False)
 
-    def __init__(self, ap_object_id, cc):
+    actor = db.relationship('Actor', foreign_keys=[actor_id])
+    ap_object = db.relationship('APObject', foreign_keys=[ap_object_id])
+
+    def __init__(self, ap_object_id, actor_id):
         self.ap_object_id = ap_object_id
-        self.cc = cc
-
-
-class APObjectBcc(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    bcc = db.Column(db.String(256), nullable=False)
-    ap_object_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
-    ap_object = db.relationship('APObject', backref='bcc')
-
-    def __init__(self, ap_object_id, bcc):
-        self.ap_object_id = ap_object_id
-        self.bcc = bcc
+        self.actor_id = actor_id
 
 
 class APObjectAttributedTo(db.Model):
@@ -68,6 +50,7 @@ class APObject(db.Model):
         Superclass for all ActivityPub objects including instances of Activity
     '''
     id = db.Column(db.Integer, primary_key=True)
+    external_id = db.Column(db.String(256), unique=True)
     context = ["https://www.w3.org/ns/activitystreams"]
     content = db.Column(db.String(4096))
     published = db.Column(db.DateTime, default=datetime.utcnow)
@@ -85,9 +68,13 @@ class APObject(db.Model):
 
         output = {
             '@context': self.context,
-            'id': f'{api_url}/objects/{self.id}',
             'type': self.type.value,
         }
+
+        if self.external_id is not None:
+            output['id'] = self.external_id
+        else:
+            output['id'] = f'{api_url}/objects/{self.id}'
 
         if self.attributed_to is not None:
             if self.attributed_to.internal_actor_id is not None:
@@ -101,59 +88,59 @@ class APObject(db.Model):
         if self.published is not None:
             output['published'] = xsd_datetime(self.published)
 
-        to = []
-        if self.to is not None:
-            for _to in self.to:
-                to.append(_to.to)
-        output['to'] = to
+        if hasattr(self, 'recipients'):
+            for recipient in self.recipients:
+                if output.get(recipient.method) is None:
+                    output[recipient.method] = [recipient.recipient]
+                else:
+                    output[recipient.method].append(recipient.recipient)
 
-        cc = []
-        if self.cc is not None:
-            for _cc in self.cc:
-                cc.append(_cc.cc)
-        output['cc'] = cc       
+
 
         return output
 
-    def set_to(self, to):
+    def add_recipient(self, method: str, recipient):
         '''
-            Input: list
+            method = 'to' | 'bto' | 'cc' | 'bcc'
+            recipient = Actor URL ID
 
-            Sets the 'to' field for this object. This operation will erase
-            all of the previous 'to' fields for this object, but these changes
-            will not be comitted or flushed.
+            Adds an actor as a recipient of this object using either the to, bto, cc, or bcc
+            ActivityPub fields. This method adds records to the database but does not commit or flush
+            them.
         '''
-        db.session.query(APObjectTo).filter(APObjectTo.ap_object_id == self.id).delete()
-        for _to in to:
-            new_to = APObjectTo(self.id, _to)
-            db.session.add(new_to)
+        method = method.lower()
+        if method != 'to' and method !='bto' and method != 'cc' and method != 'bcc':
+            raise Exception("Only acceptable values for APObject#add_recipient are 'to', 'bto', 'cc', and 'bcc'")
 
-    def set_cc(self, cc):
-        '''
-            Input: list
-
-            Sets the 'to' field for this object. This operation will erase
-            all of the previous 'to' fields for this object, but these changes
-            will not be comitted or flushed.
-        '''
-        db.session.query(APObjectCc).filter(APObjectCc.ap_object_id == self.id).delete()
-        for _cc in cc:
-            new_cc = APObjectCc(self.id, _cc)
-            db.session.add(new_cc)
+        db.session.add((APObjectRecipient(self.id, method, recipient)))
 
 
-    def set_bcc(self, bcc):
+    def add_all_recipients(self, obj: dict):
         '''
-            Input: list
+            Takes a dictionary object which contains some combination of 
+            the 'to', 'bto', 'cc', and 'bcc' fields and adds the intended recipients 
+            as recipients of this object.
 
-            Sets the 'to' field for this object. This operation will erase
-            all of the previous 'to' fields for this object, but these changes
-            will not be comitted or flushed.
+            The four aformentioned fields can be either strings or lists.
         '''
-        db.session.query(APObjectBcc).filter(APObjectBcc.ap_object_id == self.id).delete()
-        for _bcc in bcc:
-            new_bcc = APObjectBcc(self.id, _bcc)
-            db.session.add(new_bcc)
+        keys = ['to', 'bto', 'cc', 'bcc']
+        for key in keys:
+            value = obj.get(key)
+            if value is not None:
+                if isinstance(value, str):
+                    value = [value]
+                elif isinstance(value, list) is not True:
+                    raise Exception(f'APObject#add_all_recipients method given an object whose {key} value was neither a string nor an array.')
+                
+                for _value in value:
+                    self.add_recipient(key, _value)
+
+    def add_to_inbox(self, actor):
+        '''
+            actor: Vagabond.models.Actor | int
+            Puts this object into the inbox of a local actor.
+
+        '''
 
 
     def attribute_to(self, author):

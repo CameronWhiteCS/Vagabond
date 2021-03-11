@@ -48,6 +48,10 @@ class Actor(APObject):
         output['following'] = f'{api_url}/actors/{username}/following'
         output['liked'] = f'{api_url}/actors/{username}/liked'
         output['preferredUsername'] = self.username
+        output['endpoints'] = {
+            'sharedInbox': f'{api_url}/inbox'
+        }
+
 
         output['publicKey'] = {
             'actor': f'{api_url}/actors/{username}',
