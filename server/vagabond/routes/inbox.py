@@ -62,7 +62,6 @@ def accept_inbound_follow(activity, obj):
     leader = db.session.query(Actor).filter(db.func.lower(Actor.username) == local_actor_name).first()
 
     if leader is None:
-
         return error('Actor not found', 404)
 
     follower = resolve_ap_object(activity['actor'])

@@ -33,6 +33,9 @@ def generate_signing_string(actor, host, request_target, method, body, date, con
 def signed_request(actor, body, url=None, host=None, request_target=None, method='POST', content_type='application/activity+json'):
     '''
         Makes a signed POST request according to the HTTPS signatures specification.
+        
+        actor: Actor model
+            actor who is making the signed request
 
         body: dict
             HTTP message body
