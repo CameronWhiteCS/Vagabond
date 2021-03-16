@@ -22,7 +22,7 @@ def get_http_datetime():
 
 
 
-def generate_signing_string(host, request_target, method, body, date, content_type):
+def generate_signing_string(actor, host, request_target, method, body, date, content_type):
     method = method.lower()
     digest = b64encode(SHA256.new(bytes(body, 'utf-8')).digest()).decode('utf-8')
     # Single line used to make sure UNIX v.s. NT line endings don't cause any problems.
@@ -33,7 +33,7 @@ def generate_signing_string(host, request_target, method, body, date, content_ty
 def signed_request(actor, body, url=None, host=None, request_target=None, method='POST', content_type='application/activity+json'):
     '''
         Makes a signed POST request according to the HTTPS signatures specification.
-
+        
         actor: Actor model
             actor who is making the signed request
 
@@ -82,9 +82,9 @@ def signed_request(actor, body, url=None, host=None, request_target=None, method
     if type(body) is dict:
         body = json.dumps(body)
 
-    signing_string = generate_signing_string(host, request_target, method, body, date, content_type)
+    signing_string = generate_signing_string(actor, host, request_target, method, body, date, content_type)
 
-    private_key = RSA.importKey(actor.private_key)
+    private_key = RSA.importKey(config['private_key'])
     pkcs = pkcs1_15.new(private_key)
     
     sha256_body = SHA256.new(bytes(body, 'utf-8'))
