@@ -7,3 +7,4 @@ from .Actor import Actor
 from .Note import Note
 from .Create import Create
 from .Follow import Follow
+from .FollowedBy import FollowedBy
