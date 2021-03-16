@@ -107,7 +107,7 @@ def follow(actor, follow_activity):
     new_follow = Following(actor.id, leader['id'], leader['followers'])
     db.session.add(new_follow)
 
-    response = signed_request(actor, new_activity.to_dict(), leader['inbox'])
+    signed_request(actor, new_activity.to_dict(), leader['inbox'])
 
     db.session.commit()
 
