@@ -111,12 +111,6 @@ def follow(actor, follow_activity):
 
     db.session.commit()
 
-    if response.status_code >= 400:
-        
-        return error('Something went wrong :(')
-
-
-
     return make_response('', 200)
 
 

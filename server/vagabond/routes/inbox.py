@@ -4,12 +4,14 @@ from flask import request, make_response
 
 from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
-from vagabond.crypto import require_signature
+from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Following, Follow, APObjectRecipient, Create, Note
+from vagabond.models import Actor, Following, FollowedBy, Follow, APObjectRecipient, Create, Note
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse
+
+import json
 
 
 def modify_follow(actor, activity, obj):
@@ -46,19 +48,64 @@ def modify_follow(actor, activity, obj):
     return make_response('', 200)
 
 
+def accept_inbound_follow(activity, obj):
+    #TODO: Notification that you've been followed
+    #TODO: Privacy settings for person being followed
+
+    api_url = config['api_url']
+
+    if obj['id'].find(f'{api_url}/actors/') < 0:
+        return error('Invalid actor ID')
+
+    local_actor_name = obj['id'].replace(f'{api_url}/actors/', "").lower()
+
+    leader = db.session.query(Actor).filter(db.func.lower(Actor.username) == local_actor_name).first()
+
+    if leader is None:
+        return error('Actor not found', 404)
+
+    follower = resolve_ap_object(activity['actor'])
+
+    follower_shared_inbox = None
+    follower_inbox = follower['inbox']
+
+    if 'endpoints' in follower:
+        if 'sharedInbox' in follower['endpoints']:
+            follower_shared_inbox = follower['endpoints']['sharedInbox']
+
+
+    message_body = {
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        'id': f'{api_url}/objects/acceptFollow', #ephemiral ID
+        'actor': f'{api_url}/actors/{leader.username}',
+        'type': 'Accept',
+        'object': activity
+    }
+
+    try:
+        signed_request(leader, message_body, url=follower_inbox)
+    except:
+        return error('@@@@@@@@@@@', 400)
+
+    new_followed_by = FollowedBy(leader.id, follower['id'], follower_inbox, follower_shared_inbox)
+    db.session.add(new_followed_by)
+    db.session.commit()
+
+    return make_response('', 201)
+
+
+
 
 def new_ob_object(activity, obj, recipient=None):
     '''
-        ?recipient: dict
-            the actor whose inbox this activity was POSTed to
         activity: dict
             The activity being preformed
-        ?obj: dict
+        obj: dict
             The object the activity is being done on
-
+        ?recipient: dict
+            the actor whose inbox this activity was POSTed to
 
         Returns: Flask Response object
-
 
         To avoid repetition, this function is used to process
         ALL inbound APObjects to an actor's inbox regardless as
@@ -75,6 +122,8 @@ def new_ob_object(activity, obj, recipient=None):
         base_activity = Create()
     elif (activity['type'] == 'Accept' or activity['type'] == 'Reject') and obj['type'] == 'Follow' and recipient is not None:
         return modify_follow(recipient, activity, obj)
+    elif activity['type'] == 'Follow':
+        return accept_inbound_follow(activity, obj)
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           
