@@ -26,7 +26,7 @@ def get_outbox(username):
         return error('Actor not found', 404)
 
     items_per_page = 20
-    total_items = db.session.query(APObject).filter_by(type=APObjectType.NOTE).count()
+    total_items = db.session.query(Activity).filter(Activity.actor == actor).count()
     max_page = ceil(total_items / items_per_page)
     api_url = config['api_url']
 
@@ -42,40 +42,6 @@ def get_outbox(username):
     response = make_response(output, 200)
     response.headers['Content-Type'] = 'application/activity+json'
     return response
-
-
-# TODO Input validation for note
-def create_note(actor, note):
-    '''
-            actor: Actor model
-            note: Dictionary representing the newly created note
-    '''
-
-    published = parse(note.get('published'))
-    content = note.get('content')
-
-    #Create note
-    new_note = Note()
-    new_note.content = content
-    new_note.published = published
-    db.session.add(new_note)
-    db.session.flush()
-    new_note.attribute_to(actor)
-    new_note.add_all_recipients(note)
-
-
-    #Create activity
-    new_activity = Create()
-    new_activity.set_actor(actor)
-    new_activity.set_object(new_note)
-    db.session.add(new_activity)
-    db.session.flush()
-    new_activity.attribute_to(actor)
-    new_activity.add_all_recipients(note)
-
-    db.session.commit()
-
-    return make_response('', 201)
 
 
 # TODO: Input validation for follow activity
@@ -121,11 +87,10 @@ by require_signin
 '''
 # TODO: Cerberus validation
 
-
 @require_signin
-def post_outbox_c2s(actor_name, *args, **kwargs):
+def post_outbox_c2s(actor_name, user=None):
 
-    user = kwargs['user']
+    #Verify that user is authorized to post to this outbox
     is_own_outbox = False
     actor = None
     for _actor in user.actors:
@@ -137,15 +102,70 @@ def post_outbox_c2s(actor_name, *args, **kwargs):
     if not is_own_outbox:
         return error('You can\'t post to the outbox of an actor that isn\'t yours.')
 
-    _type = request.get_json().get('type')
-    if _type is None:
-        return error('Invalid ActivityPub object type')
-    elif _type == 'Note':
-        return create_note(actor, request.get_json())
-    elif _type == 'Follow':
-        return follow(actor, request.get_json())
+    inbound_object = request.get_json()
+    inbound_object_target = None
+    if 'object' in inbound_object:
+        inbound_object_target = resolve_ap_object(inbound_object['object'])
 
-    return error('Invalid ActivityPub object type.')
+
+    #Create activity and object, set polymorphic type, and flush to DB
+    base_activity = None
+    base_object = None
+
+    if inbound_object['type'] == 'Note':
+        base_object = Note()
+        base_activity = Create()
+    elif inbound_object['type'] == 'Follow':
+        #TODO: generalize follow
+        return follow(actor, inbound_object)
+    else:
+        return error('Vagabond does not currently support this type of AcvtivityPub object. :(')
+
+
+    if base_object is not None:
+        db.session.add(base_object)
+    db.session.add(base_activity)
+
+    db.session.flush()
+
+    #General AP object handling
+    if inbound_object_target is None:
+        # Client only sent an object/activity to the server and didn't specify a target object
+        if 'published' in inbound_object:
+            published = parse(inbound_object['published'])
+            base_activity.published = published
+            base_object.published = published
+
+        base_activity.add_all_recipients(inbound_object)
+        base_object.add_all_recipients(inbound_object)
+        base_activity.set_object(base_object)
+
+
+    elif inbound_object_target is not None:
+            # Client sent both the activity and the related object to the server
+            if 'published' in inbound_object:
+                base_activity.published = parse(inbound_object['published'])
+
+            if 'published' in inbound_object_target:
+                base_object.published = parse(inbound_object_target['published'])
+
+
+    #Generic things to handle independently of whether or not an activity and an object
+    # or just an object were provided.
+    base_activity.set_actor(actor)
+  
+
+    # Handle requirements for specific object types
+    if inbound_object['type'] == 'Note':
+        base_object.attribute_to(actor)
+        base_object.content = inbound_object['content']
+
+
+
+
+    db.session.commit()
+
+    return make_response('', 201)
 
 
 @app.route('/api/v1/actors/<actor_name>/outbox', methods=['GET', 'POST'])
@@ -175,10 +195,10 @@ def route_user_outbox_paginated(actor_name, page):
         Activity.actor == actor, Activity.type != APObjectType.FOLLOW)).order_by(Activity.published.desc()).paginate(page, 20).items
     api_url = config['api_url']
 
-    orderedItems = []
+    ordere_items = []
 
     for activity in activities:
-        orderedItems.append(activity.to_dict())
+        ordere_items.append(activity.to_dict())
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
@@ -187,7 +207,7 @@ def route_user_outbox_paginated(actor_name, page):
         'type': 'OrderedCollectionPage',
         'prev': f'{api_url}/actors/{actor_name}/outbox/{page-1}',
         'next': f'{api_url}/actors/{actor_name}/outbox/{page+1}',
-        'orderedItems': orderedItems
+        'orderedItems': ordere_items
     }
 
     response = make_response(output, 200)
