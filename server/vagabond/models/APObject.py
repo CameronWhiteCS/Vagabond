@@ -16,24 +16,10 @@ class APObjectRecipient(db.Model):
 
     ap_object = db.relationship('APObject', backref='recipients')
 
-    def __init__(self, ap_object_id, method, recipient):
-        self.ap_object_id = ap_object_id
+    def __init__(self, ap_object, method, recipient):
+        self.ap_object = ap_object
         self.method = method
         self.recipient = recipient
-
-
-class APObjectInbox(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ap_object_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
-    actor_id = db.Column(db.Integer, db.ForeignKey('actor.id'), nullable=False)
-
-    actor = db.relationship('Actor', foreign_keys=[actor_id])
-    ap_object = db.relationship('APObject', foreign_keys=[ap_object_id])
-
-    def __init__(self, ap_object_id, actor_id):
-        self.ap_object_id = ap_object_id
-        self.actor_id = actor_id
-
 
 class APObjectAttributedTo(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -41,7 +27,7 @@ class APObjectAttributedTo(db.Model):
     external_actor_id = db.Column(db.String(1024))
     ap_object_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
     
-    ap_object = db.relationship('APObject', uselist=False, foreign_keys=[ap_object_id])
+    ap_object = db.relationship('APObject', uselist=False, foreign_keys=[ap_object_id], backref='attributions')
     internal_actor = db.relationship('Actor', foreign_keys=[internal_actor_id])
 
 
@@ -99,20 +85,19 @@ class APObject(db.Model):
 
         return output
 
-    def add_recipient(self, method: str, recipient):
+    def add_recipient(self, method, recipient):
         '''
             method = 'to' | 'bto' | 'cc' | 'bcc'
             recipient = Actor URL ID
 
             Adds an actor as a recipient of this object using either the to, bto, cc, or bcc
-            ActivityPub fields. This method adds records to the database but does not commit or flush
-            them.
+            ActivityPub fields. 
         '''
         method = method.lower()
         if method != 'to' and method !='bto' and method != 'cc' and method != 'bcc':
             raise Exception("Only acceptable values for APObject#add_recipient are 'to', 'bto', 'cc', and 'bcc'")
 
-        db.session.add((APObjectRecipient(self.id, method, recipient)))
+        self.recipients.append(APObjectRecipient(self, method, recipient))
 
 
     def add_all_recipients(self, obj: dict):
@@ -153,11 +138,9 @@ class APObject(db.Model):
             A string indicates that the object is being attributed to an external actor while
             a SQLAlchemy model or integer indicates a local actor.
 
-            The newly created instance of APObjectAttributedTo is added to the database session,
-            but not committed or flushed.
         '''
         attribution = APObjectAttributedTo()
-        attribution.ap_object_id = self.id
+        attribution.ap_object = self
 
         if isinstance(author, str):
             attribution.external_actor_id = author
@@ -165,6 +148,4 @@ class APObject(db.Model):
             attribution.internal_actor_id = author.id
         elif isinstance(author, int): 
             attribution.internal_actor_id = author
-
-        db.session.add(attribution)
 

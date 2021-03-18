@@ -6,7 +6,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Following, FollowedBy, Follow, APObjectRecipient, Create, Note
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse
@@ -183,7 +183,7 @@ def get_inbox(personalized, user=None):
     for leader in leaders:
         followers_urls.append(leader.followers_collection)
 
-    total_items = db.session.query(APObjectRecipient).filter(APObjectRecipient.recipient.in_(followers_urls)).count()
+    total_items = db.session.query(APObjectRecipient.ap_object_id.distinct()).filter(APObjectRecipient.recipient.in_(followers_urls)).count()
     items_per_page = 20
     max_page = ceil(total_items / items_per_page)
 
@@ -220,7 +220,13 @@ def get_inbox_paginated(actor, page, personalized):
     ordered_items = []
 
     for recipient_object in recipient_objects:
-        ordered_items.append(recipient_object.ap_object.to_dict())
+        appended = recipient_object.ap_object.to_dict()
+        if 'object' in appended and isinstance(appended['object'], str):
+            queried_item = db.session.query(APObject).filter(APObject.external_id == appended['object']).first()
+            if queried_item is not None:
+                appended['object'] = queried_item.to_dict()
+
+        ordered_items.append(appended)
 
     api_url = config['api_url']
 
