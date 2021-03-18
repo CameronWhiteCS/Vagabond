@@ -61,7 +61,6 @@ def post_outbox_c2s(actor_name, user=None):
         base_activity.object = base_object
         base_activity.add_all_recipients(inbound_object)
         base_activity.add_all_recipients(inbound_object)
-
     elif inbound_object['type'] == 'Follow':
         base_activity = Follow()
         db.session.add(base_activity)
