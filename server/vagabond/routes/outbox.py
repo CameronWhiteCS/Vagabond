@@ -17,67 +17,8 @@ from vagabond.crypto import require_signature, signed_request
 from vagabond.util import resolve_ap_object
 
 
-def get_outbox(username):
-
-    username = username.lower()
-
-    actor = db.session.query(Actor).filter_by(username=username).first()
-    if not actor:
-        return error('Actor not found', 404)
-
-    items_per_page = 20
-    total_items = db.session.query(Activity).filter(Activity.actor == actor).count()
-    max_page = ceil(total_items / items_per_page)
-    api_url = config['api_url']
-
-    output = {
-        '@context': 'https://www.w3.org/ns/activitystreams',
-        'id': f'{api_url}/actors/{username}/outbox',
-        'type': 'OrderedCollection',
-        'totalItems': total_items,
-        'first': f'{api_url}/actors/{username}/outbox/1',
-        'last': f'{api_url}/actors/{username}/outbox/{max_page}'
-    }
-
-    response = make_response(output, 200)
-    response.headers['Content-Type'] = 'application/activity+json'
-    return response
-
-
-# TODO: Input validation for follow activity
-def follow(actor, follow_activity):
-    '''
-        actor: Actor model
-        follow_activity: Dictionary representation of the new follow request
-    '''
-
-    leader = resolve_ap_object(follow_activity['object'])
-
-    existing_follow = db.session.query(Following).filter(db.and_(
-        Following.follower_id == actor.id,
-        Following.leader == leader['id']
-    )).first()
-
-    if existing_follow is not None:
-        if existing_follow.approved is True:
-            return error('You are already following this actor.')
-
-        db.session.delete(existing_follow)
-
-    new_activity = Follow()
-    new_activity.set_actor(actor)
-    new_activity.set_object(follow_activity['object'])
-    db.session.add(new_activity)
-    db.session.flush()
-
-    new_follow = Following(actor.id, leader['id'], leader['followers'])
-    db.session.add(new_follow)
-
-    signed_request(actor, new_activity.to_dict(), leader['inbox'])
-
-    db.session.commit()
-
-    return make_response('', 200)
+def handle_follow():
+    pass
 
 
 '''
@@ -86,11 +27,10 @@ to calm down the linter. User argument provided
 by require_signin
 '''
 # TODO: Cerberus validation
-
 @require_signin
 def post_outbox_c2s(actor_name, user=None):
 
-    #Verify that user is authorized to post to this outbox
+    # Make sure the user has permission to post to this outbox
     is_own_outbox = False
     actor = None
     for _actor in user.actors:
@@ -102,66 +42,75 @@ def post_outbox_c2s(actor_name, user=None):
     if not is_own_outbox:
         return error('You can\'t post to the outbox of an actor that isn\'t yours.')
 
+
+
+
     inbound_object = request.get_json()
-    inbound_object_target = None
-    if 'object' in inbound_object:
-        inbound_object_target = resolve_ap_object(inbound_object['object'])
 
 
-    #Create activity and object, set polymorphic type, and flush to DB
-    base_activity = None
-    base_object = None
+
+    # Create activity and possibly the object, set polymorphic type, and flush to DB
+    base_activity = None # base_activity always exists
+    base_object = None # base_object sometimes exists
 
     if inbound_object['type'] == 'Note':
         base_object = Note()
         base_activity = Create()
+        db.session.add(base_object)
+        db.session.add(base_activity)
+        base_activity.object = base_object
+        base_activity.add_all_recipients(inbound_object)
+        base_activity.add_all_recipients(inbound_object)
+
     elif inbound_object['type'] == 'Follow':
-        #TODO: generalize follow
-        return follow(actor, inbound_object)
+        base_activity = Follow()
+        db.session.add(base_activity)
     else:
         return error('Vagabond does not currently support this type of AcvtivityPub object. :(')
 
-
-    if base_object is not None:
-        db.session.add(base_object)
-    db.session.add(base_activity)
-
     db.session.flush()
 
-    #General AP object handling
-    if inbound_object_target is None:
-        # Client only sent an object/activity to the server and didn't specify a target object
-        if 'published' in inbound_object:
-            published = parse(inbound_object['published'])
-            base_activity.published = published
-            base_object.published = published
 
-        base_activity.add_all_recipients(inbound_object)
-        base_object.add_all_recipients(inbound_object)
+    # Set actor for activity
+    base_activity.set_actor(actor)
+
+    # Set activity ----> object relationship
+    if base_object is None:
+        base_activity.set_object(inbound_object['object'])
+    else:
         base_activity.set_object(base_object)
 
 
-    elif inbound_object_target is not None:
-            # Client sent both the activity and the related object to the server
-            if 'published' in inbound_object:
-                base_activity.published = parse(inbound_object['published'])
 
-            if 'published' in inbound_object_target:
-                base_object.published = parse(inbound_object_target['published'])
+    if base_object is None:
+        # User provided activity but not object
+        pass
+    else:
+        # User provided both activity and object, or an implicit activity (IE, note --> create(note))
+        pass
 
 
-    #Generic things to handle independently of whether or not an activity and an object
-    # or just an object were provided.
-    base_activity.set_actor(actor)
+
   
 
     # Handle requirements for specific object types
     if inbound_object['type'] == 'Note':
         base_object.attribute_to(actor)
         base_object.content = inbound_object['content']
+    elif inbound_object['type'] == 'Follow':
+        leader = resolve_ap_object(inbound_object['object'])
 
+        existing_follow = db.session.query(Following).filter(db.and_(
+            Following.follower_id == actor.id,
+            Following.leader == leader['id']
+        )).first()
 
+        if existing_follow is not None and existing_follow.approved is True:
+                return error('You are already following this actor.')
 
+        new_follow = Following(actor.id, leader['id'], leader['followers'])
+        db.session.add(new_follow)
+        signed_request(actor, base_activity.to_dict(), leader['inbox'])
 
     db.session.commit()
 
@@ -208,6 +157,32 @@ def route_user_outbox_paginated(actor_name, page):
         'prev': f'{api_url}/actors/{actor_name}/outbox/{page-1}',
         'next': f'{api_url}/actors/{actor_name}/outbox/{page+1}',
         'orderedItems': ordere_items
+    }
+
+    response = make_response(output, 200)
+    response.headers['Content-Type'] = 'application/activity+json'
+    return response
+
+def get_outbox(username):
+    
+    username = username.lower()
+
+    actor = db.session.query(Actor).filter_by(username=username).first()
+    if not actor:
+        return error('Actor not found', 404)
+
+    items_per_page = 20
+    total_items = db.session.query(Activity).filter(Activity.actor == actor).count()
+    max_page = ceil(total_items / items_per_page)
+    api_url = config['api_url']
+
+    output = {
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        'id': f'{api_url}/actors/{username}/outbox',
+        'type': 'OrderedCollection',
+        'totalItems': total_items,
+        'first': f'{api_url}/actors/{username}/outbox/1',
+        'last': f'{api_url}/actors/{username}/outbox/{max_page}'
     }
 
     response = make_response(output, 200)
