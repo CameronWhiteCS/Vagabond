@@ -79,18 +79,14 @@ def post_outbox_c2s(actor_name, user=None):
     else:
         base_activity.set_object(base_object)
 
+    # Set actor for activity
+    base_activity.set_actor(actor)
 
-
+    # Set activity ----> object relationship
     if base_object is None:
-        # User provided activity but not object
-        pass
+        base_activity.set_object(inbound_object['object'])
     else:
-        # User provided both activity and object, or an implicit activity (IE, note --> create(note))
-        pass
-
-
-
-  
+        base_activity.set_object(base_object)
 
     # Handle requirements for specific object types
     if inbound_object['type'] == 'Note':
