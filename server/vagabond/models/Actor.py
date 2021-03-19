@@ -7,9 +7,7 @@ from Crypto.PublicKey import RSA
 
 class Actor(APObject):
     id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), primary_key=True)
-    username = db.Column(db.String(32), nullable=False)
-    public_key = db.Column(db.Text(16639))
-    private_key = db.Column(db.Text(16639))
+    username = db.Column(db.String(32), unique = True ,nullable=False)
 
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship('User', backref='actors', foreign_keys=[user_id])
@@ -27,12 +25,8 @@ class Actor(APObject):
         elif user is not None:
             self.user_id = user.id
         else:
-            raise Exception(
-                'Instantiating an Actor requires either a user object or user id. ')
+            raise Exception('Instantiating an Actor requires either a user object or user id. ')
 
-        key = RSA.generate(2048)
-        self.private_key = key.export_key()
-        self.public_key = key.publickey().export_key()
         self.type = APObjectType.PERSON
 
     def to_dict(self):
@@ -48,11 +42,15 @@ class Actor(APObject):
         output['following'] = f'{api_url}/actors/{username}/following'
         output['liked'] = f'{api_url}/actors/{username}/liked'
         output['preferredUsername'] = self.username
+        output['endpoints'] = {
+            'sharedInbox': f'{api_url}/inbox'
+        }
+
 
         output['publicKey'] = {
             'actor': f'{api_url}/actors/{username}',
             'id': f'{api_url}/actors/{username}#main-key',
-            'publicKeyPem': self.public_key
+            'publicKeyPem': config['public_key']
         }
 
         return output

@@ -17,108 +17,8 @@ from vagabond.crypto import require_signature, signed_request
 from vagabond.util import resolve_ap_object
 
 
-def get_outbox(username):
-
-    username = username.lower()
-
-    actor = db.session.query(Actor).filter_by(username=username).first()
-    if not actor:
-        return error('Actor not found', 404)
-
-    items_per_page = 20
-    total_items = db.session.query(APObject).filter_by(type=APObjectType.NOTE).count()
-    max_page = ceil(total_items / items_per_page)
-    api_url = config['api_url']
-
-    output = {
-        '@context': 'https://www.w3.org/ns/activitystreams',
-        'id': f'{api_url}/actors/{username}/outbox',
-        'type': 'OrderedCollection',
-        'totalItems': total_items,
-        'first': f'{api_url}/actors/{username}/outbox/1',
-        'last': f'{api_url}/actors/{username}/outbox/{max_page}'
-    }
-
-    response = make_response(output, 200)
-    response.headers['Content-Type'] = 'application/activity+json'
-    return response
-
-
-# TODO Input validation for note
-def create_note(actor, note):
-    '''
-            actor: Actor model
-            note: Dictionary representing the newly created note
-    '''
-
-    published = parse(note.get('published'))
-    content = note.get('content')
-
-    #Create note
-    new_note = Note()
-    new_note.content = content
-    new_note.published = published
-    db.session.add(new_note)
-    db.session.flush()
-    new_note.attribute_to(actor)
-    new_note.set_to(request.get_json().get('to'))
-    new_note.set_cc(request.get_json().get('cc'))
-
-    #Create activity
-    new_activity = Create()
-    new_activity.set_actor(actor)
-    new_activity.set_object(new_note)
-    db.session.add(new_activity)
-    db.session.flush()
-    new_activity.attribute_to(actor)
-    new_activity.set_to(request.get_json().get('to'))
-    new_activity.set_cc(request.get_json().get('cc'))
-
-    db.session.commit()
-
-    return make_response('', 201)
-
-
-# TODO: Input validation for follow activity
-def follow(actor, follow_activity):
-    '''
-        actor: Actor model
-        follow_activity: Dictionary representation of the new follow request
-    '''
-
-    leader = resolve_ap_object(follow_activity['object'])
-
-    existing_follow = db.session.query(Following).filter(db.and_(
-        Following.follower_id == actor.id,
-        Following.leader == leader['id']
-    )).first()
-
-    if existing_follow is not None:
-        if existing_follow.approved is True:
-            return error('You are already following this actor.')
-
-        db.session.delete(existing_follow)
-
-    new_activity = Follow()
-    new_activity.set_actor(actor)
-    new_activity.set_object(follow_activity['object'])
-    db.session.add(new_activity)
-    db.session.flush()
-
-    new_follow = Following(actor.id, leader['id'])
-    db.session.add(new_follow)
-
-    response = signed_request(actor, new_activity.to_dict(), leader['inbox'])
-
-    db.session.commit()
-
-    if response.status_code >= 400:
-        
-        return error('Something went wrong :(')
-
-
-
-    return make_response('', 200)
+def handle_follow():
+    pass
 
 
 '''
@@ -127,12 +27,10 @@ to calm down the linter. User argument provided
 by require_signin
 '''
 # TODO: Cerberus validation
-
-
 @require_signin
-def post_outbox_c2s(actor_name, *args, **kwargs):
+def post_outbox_c2s(actor_name, user=None):
 
-    user = kwargs['user']
+    # Make sure the user has permission to post to this outbox
     is_own_outbox = False
     actor = None
     for _actor in user.actors:
@@ -144,15 +42,74 @@ def post_outbox_c2s(actor_name, *args, **kwargs):
     if not is_own_outbox:
         return error('You can\'t post to the outbox of an actor that isn\'t yours.')
 
-    _type = request.get_json().get('type')
-    if _type is None:
-        return error('Invalid ActivityPub object type')
-    elif _type == 'Note':
-        return create_note(actor, request.get_json())
-    elif _type == 'Follow':
-        return follow(actor, request.get_json())
 
-    return error('Invalid ActivityPub object type.')
+
+
+    inbound_object = request.get_json()
+
+
+
+    # Create activity and possibly the object, set polymorphic type, and flush to DB
+    base_activity = None # base_activity always exists
+    base_object = None # base_object sometimes exists
+
+    if inbound_object['type'] == 'Note':
+        base_object = Note()
+        base_activity = Create()
+        db.session.add(base_object)
+        db.session.add(base_activity)
+        base_activity.object = base_object
+        base_activity.add_all_recipients(inbound_object)
+        base_activity.add_all_recipients(inbound_object)
+    elif inbound_object['type'] == 'Follow':
+        base_activity = Follow()
+        db.session.add(base_activity)
+    else:
+        return error('Vagabond does not currently support this type of AcvtivityPub object. :(')
+
+    db.session.flush()
+
+
+    # Set actor for activity
+    base_activity.set_actor(actor)
+
+    # Set activity ----> object relationship
+    if base_object is None:
+        base_activity.set_object(inbound_object['object'])
+    else:
+        base_activity.set_object(base_object)
+
+    # Set actor for activity
+    base_activity.set_actor(actor)
+
+    # Set activity ----> object relationship
+    if base_object is None:
+        base_activity.set_object(inbound_object['object'])
+    else:
+        base_activity.set_object(base_object)
+
+    # Handle requirements for specific object types
+    if inbound_object['type'] == 'Note':
+        base_object.attribute_to(actor)
+        base_object.content = inbound_object['content']
+    elif inbound_object['type'] == 'Follow':
+        leader = resolve_ap_object(inbound_object['object'])
+
+        existing_follow = db.session.query(Following).filter(db.and_(
+            Following.follower_id == actor.id,
+            Following.leader == leader['id']
+        )).first()
+
+        if existing_follow is not None and existing_follow.approved is True:
+                return error('You are already following this actor.')
+
+        new_follow = Following(actor.id, leader['id'], leader['followers'])
+        db.session.add(new_follow)
+        signed_request(actor, base_activity.to_dict(), leader['inbox'])
+
+    db.session.commit()
+
+    return make_response('', 201)
 
 
 @app.route('/api/v1/actors/<actor_name>/outbox', methods=['GET', 'POST'])
@@ -182,10 +139,10 @@ def route_user_outbox_paginated(actor_name, page):
         Activity.actor == actor, Activity.type != APObjectType.FOLLOW)).order_by(Activity.published.desc()).paginate(page, 20).items
     api_url = config['api_url']
 
-    orderedItems = []
+    ordere_items = []
 
     for activity in activities:
-        orderedItems.append(activity.to_dict())
+        ordere_items.append(activity.to_dict())
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
@@ -194,7 +151,33 @@ def route_user_outbox_paginated(actor_name, page):
         'type': 'OrderedCollectionPage',
         'prev': f'{api_url}/actors/{actor_name}/outbox/{page-1}',
         'next': f'{api_url}/actors/{actor_name}/outbox/{page+1}',
-        'orderedItems': orderedItems
+        'orderedItems': ordere_items
+    }
+
+    response = make_response(output, 200)
+    response.headers['Content-Type'] = 'application/activity+json'
+    return response
+
+def get_outbox(username):
+    
+    username = username.lower()
+
+    actor = db.session.query(Actor).filter_by(username=username).first()
+    if not actor:
+        return error('Actor not found', 404)
+
+    items_per_page = 20
+    total_items = db.session.query(Activity).filter(Activity.actor == actor).count()
+    max_page = ceil(total_items / items_per_page)
+    api_url = config['api_url']
+
+    output = {
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        'id': f'{api_url}/actors/{username}/outbox',
+        'type': 'OrderedCollection',
+        'totalItems': total_items,
+        'first': f'{api_url}/actors/{username}/outbox/1',
+        'last': f'{api_url}/actors/{username}/outbox/{max_page}'
     }
 
     response = make_response(output, 200)

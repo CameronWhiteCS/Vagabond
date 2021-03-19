@@ -6,9 +6,13 @@ from vagabond.config import config
 from vagabond.util import xsd_datetime
 from vagabond.routes import error
 
-@app.route('/api/v1/objects/<int:id>')
-def get_note_by_id(id):
-    ap_object = db.session.query(APObject).get(id)
+
+@app.route('/api/v1/objects/<int:object_id>')
+def get_note_by_id(object_id):
+
+    ap_object = db.session.query(APObject).filter(
+        db.and_(APObject.id == object_id, APObject.external_id == None)).first()
+
     if ap_object is None:
         return error('Object not found', 404)
     response = make_response(ap_object.to_dict(), 200)
@@ -16,16 +20,14 @@ def get_note_by_id(id):
     return response
 
 
-
 @app.route('/api/v1/feed')
 def route_feed():
     notes = db.session.query(APObject).filter_by(type=APObjectType.NOTE).order_by(APObject.published.desc()).all()
     output = []
-    domain = config['domain']
     for note in notes:
         output.append({
             'content': note.content,
-            'handle': f'@{note.attributed_to.username}@{domain}',
+            'handle': '@username@domain',
             'published': note.published
         })
     return make_response(jsonify(output), 200)

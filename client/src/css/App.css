@@ -9,7 +9,6 @@ body {
   height: 40px;
   border-radius: 5px;
 }
-
 /*=-=-=-=-=-=-=-=-=-=-=-=- SHOULD BE NEW SCSS FILE ONLY FOR POPUP-MODAL STUFF, BUT TEMPORARILY HERE*/
 .modal-dialog {
   background-color: rgba(0, 0, 0, 0.75);
@@ -99,6 +98,7 @@ body {
   text-decoration: underline;
   text-decoration-color: #339CFE;
 }
+
 .modal-content form .signup-toggler:hover {
   text-decoration: none;
   cursor: pointer;
@@ -143,10 +143,12 @@ div.vagabond-navbar #vagabondTitle {
   padding-top: 10px;
   color: white;
 }
+
 div.vagabond-navbar .logoAndTitle {
   display: flex;
   margin-left: 25px;
 }
+
 div.vagabond-navbar svg.icon {
   margin: auto 0px auto 25px;
   color: white;
