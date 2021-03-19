@@ -33,7 +33,7 @@ const Note = (props) => {
         // Show dropdown menu of more options
     }
 
-    const handleShare  = () => {
+    const handleShare = () => {
         console.log("Share")
         // Show options to share
     }
@@ -48,24 +48,24 @@ const Note = (props) => {
         console.log("Open profile")
         // Open profile who made the note
     }
-    
+
     // {props.note.handle}
     // {props.note.published}
 
     // {props.note.content}
-           
-      
-    
+
+
+
     return (
-       <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
-        <div className="vagabond-tile note" style={{padding:'15px'}}>
+        <div onClick={openNote} className="vagabond-tile note" style={{ padding: '15px' }}>
             <div className="pfp-container">
                 <img onClick={openProfile} src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
-                     width="100%"
-                     height="auto"
-                     style={{borderRadius:'50%'}}
+                    width="100%"
+                    height="auto"
+                    style={{ borderRadius: '50%' }}
                 />
             </div>
+
             <div class="content">
                 <div className="user-and-time">
                     <div className="handle" onClick={openProfile}>Username</div>
@@ -73,24 +73,24 @@ const Note = (props) => {
                 </div>
                 <div className="info">
                     tweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetete
-                </div>
-                <div className="icon-bar-horizontal" style={{justifyContent:'space-between'}>
+            </div>
+                <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
                     <div style={style}>
                         <Heart onClick={handleLike} className="note-icon" />1234
-                    </div>
+                </div>
                     <div style={style}>
                         <ThumbsDown onClick={handleDislike} className="note-icon" />1234
-                    </div>
+                </div>
                     <div style={style}>
                         <MessageSquare onClick={handleComment} className="note-icon" />1234
-                    </div>
+                </div>
                     <div style={style}>
                         <ArrowUpRight onClick={handleShare} className="note-icon" />1234
-                    </div>
+                </div>
                 </div>
             </div>
-            <div class="icon-bar-vertical" style={{justifyContent:'flex-start'}}>
-                <MoreVertical onClick={handleMore} className="note-icon" style={{width:'20px',height:'20px'}}/>
+            <div class="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
+                <MoreVertical onClick={handleMore} className="note-icon" style={{ width: '20px', height: '20px' }} />
             </div>
         </div>
     );
