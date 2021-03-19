@@ -8,7 +8,7 @@ import { ReactComponent as MoreVertical } from '../../icon/more-vertical.svg';
 const Note = (props) => {
 
     const style = {
-        fontSize: '13px',
+        fontSize: '13px'
     };
 
     const handleLike = () => {
@@ -53,9 +53,12 @@ const Note = (props) => {
     // {props.note.published}
 
     // {props.note.content}
+           
+      
     
     return (
-        <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
+       <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
+        <div className="vagabond-tile note" style={{padding:'15px'}}>
             <div className="pfp-container">
                 <img onClick={openProfile} src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
                      width="100%"
@@ -72,7 +75,7 @@ const Note = (props) => {
                 <div className="info">
                     tweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetete
                 </div>
-                <div className="icon-bar-horizontal" style={{justifyContent:'space-between'}}>
+                <div className="icon-bar-horizontal" style={{justifyContent:'space-between'}>
                     <div style={style}>
                         <Heart onClick={handleLike} className="note-icon" />1234
                     </div>

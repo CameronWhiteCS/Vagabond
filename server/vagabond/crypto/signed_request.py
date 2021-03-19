@@ -22,7 +22,7 @@ def get_http_datetime():
 
 
 
-def generate_signing_string(host, request_target, method, body, date, content_type):
+def generate_signing_string(actor, host, request_target, method, body, date, content_type):
     method = method.lower()
     digest = b64encode(SHA256.new(bytes(body, 'utf-8')).digest()).decode('utf-8')
     # Single line used to make sure UNIX v.s. NT line endings don't cause any problems.
@@ -32,7 +32,30 @@ def generate_signing_string(host, request_target, method, body, date, content_ty
 
 def signed_request(actor, body, url=None, host=None, request_target=None, method='POST', content_type='application/activity+json'):
     '''
-        Makes a signed POST request according to the HTTPS signatures specification. 
+        Makes a signed POST request according to the HTTPS signatures specification.
+        
+        actor: Actor model
+            actor who is making the signed request
+
+        body: dict
+            HTTP message body
+
+        url: str
+            URL of the request
+
+        host: str
+            Domain of server the signed request is being sent to.
+            Auto populated if 'url' param is provided.
+
+        request_target: str
+            The target resource on the remote server the signed request is being sent to.
+            Auto populated if 'url' param is provided.
+
+        method: str
+            HTTP request method of signed request. Currently only supports POST
+
+        content-type: str
+            Content type of data being sent. Defaults to 'application/activity+json'
     '''
 
     if url is None:
@@ -59,9 +82,9 @@ def signed_request(actor, body, url=None, host=None, request_target=None, method
     if type(body) is dict:
         body = json.dumps(body)
 
-    signing_string = generate_signing_string(host, request_target, method, body, date, content_type)
+    signing_string = generate_signing_string(actor, host, request_target, method, body, date, content_type)
 
-    private_key = RSA.importKey(actor.private_key)
+    private_key = RSA.importKey(config['private_key'])
     pkcs = pkcs1_15.new(private_key)
     
     sha256_body = SHA256.new(bytes(body, 'utf-8'))
@@ -76,7 +99,6 @@ def signed_request(actor, body, url=None, host=None, request_target=None, method
 
     headers = {
         'user-agent': f'Vagabond/{VERSION}',
-        'host': host,
         'date': date,
         'digest': f'SHA-256={b64_digest_body}',
         'content-type': content_type,
@@ -86,7 +108,6 @@ def signed_request(actor, body, url=None, host=None, request_target=None, method
     response = requests.post(url=url, headers=headers, data=body)
 
     if response.status_code >= 400:
-        print(response.text)
         raise Exception('Signed request error')
 
     return response

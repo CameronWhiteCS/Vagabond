@@ -23,6 +23,7 @@ def log_request():
     return None
 '''
 
+
 def error(message, code=400):
     '''
         Standard error function used to
@@ -78,7 +79,8 @@ def require_signin(f):
             return error('You must be signed in to perform this operation.')
         else:
             user = db.session.query(User).get(session['uid'])
-            if not user: return error('Invalid session.')
+            if not user:
+                return error('Invalid session.')
             return f(user=user, *args, **kwargs)
 
     wrapper.__name__ = f.__name__
