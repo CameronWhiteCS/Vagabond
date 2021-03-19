@@ -46,11 +46,11 @@ const Navigation = () => {
     return (
         <div className="vagabond-navbar" style={{padding: '10px'}}>
             <span className="logoAndTitle">
-                <Logo style={{width:'40px', height:'40px', color:'white'}}/>
+                <Logo style={{width:'35px', height:'35px', fill:'white', margin:'auto 10px auto 0'}}/>
                 <div id="vagabondTitle">Vagabond</div>
             </span>
             
-            <span className="icon-bar-horizontal">
+            <span className="icon-bar-horizontal" style={{marginRight:'25px'}}>
                 <Link to="/" title="Home">
                     <LogoHome className="icon"/>
                 </Link>
@@ -71,7 +71,7 @@ const Navigation = () => {
 
                 {
                     session.signedIn && 
-                    <Link to="/notifications" title="Bell">
+                    <Link to="/notificationCenter" title="Bell">
                         <Bell className="icon"/>
                     </Link>
                 }

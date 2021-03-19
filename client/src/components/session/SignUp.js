@@ -82,7 +82,7 @@ const SignUp = () => {
                     </Form.Group>
                     <Form.Group>
                         <Form.Label htmlFor="passwordConfirm">Confirm password</Form.Label>
-                        <Form.Control onBlur={formik.handleBlur} id="passwordConfirm" name="passwordConfirm" type="password" placeholder="Password..." onChange={formik.handleChange} />
+                        <Form.Control onBlur={formik.handleBlur} id="passwordConfirm" name="passwordConfirm" type="password" placeholder="Pgitassword..." onChange={formik.handleChange} />
                         <Form.Text className="text-danger">{formik.getFieldMeta('passwordConfirm').touched && formik.errors.passwordConfirm}</Form.Text>
                     </Form.Group>
                     <Form.Group>

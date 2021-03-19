@@ -2,6 +2,14 @@ body {
   background-color: #454545;
 }
 
+.notification-option {
+  width: 100%;
+  background-color: white;
+  border-style: none;
+  height: 40px;
+  border-radius: 5px;
+}
+
 /*=-=-=-=-=-=-=-=-=-=-=-=- SHOULD BE NEW SCSS FILE ONLY FOR POPUP-MODAL STUFF, BUT TEMPORARILY HERE*/
 .modal-dialog {
   background-color: rgba(0, 0, 0, 0.75);
@@ -19,6 +27,7 @@ body {
 }
 
 .modal-content {
+  overflow-y: scroll;
   position: relative;
   display: flex;
   flex-direction: column;
@@ -33,7 +42,7 @@ body {
 }
 .modal-content .modal-button {
   margin-top: 20px;
-  width: 20%;
+  width: 80px;
   margin-left: auto;
   margin-right: auto;
   font-weight: 450;
@@ -63,34 +72,34 @@ body {
   margin-left: auto;
   margin-right: auto;
 }
-.modal-content Form {
+.modal-content form {
   display: flex;
   flex-direction: column;
   justify-content: space-around;
 }
-.modal-content Form .form-label {
+.modal-content form .form-label {
   font-weight: 450;
   color: #454545;
 }
-.modal-content Form .form-group {
+.modal-content form .form-group {
   margin-top: 10px;
   margin-bottom: 10px;
 }
-.modal-content Form .button-area {
+.modal-content form .button-area {
   display: flex;
   flex-direction: column;
   align-items: center;
 }
-.modal-content Form .form-control {
+.modal-content form .form-control {
   background-color: #f8f9fa;
 }
-.modal-content Form .signup-toggler {
+.modal-content form .signup-toggler {
   color: #339CFE;
   font-weight: normal;
   text-decoration: underline;
   text-decoration-color: #339CFE;
 }
-.modal-content Form .signup-toggler:hover {
+.modal-content form .signup-toggler:hover {
   text-decoration: none;
   cursor: pointer;
 }
@@ -109,30 +118,38 @@ h1 {
   padding-top: 40px;
 }
 
+.dark {
+  color: #363636;
+  font-weight: bold;
+}
+
 div.vagabond-navbar {
   display: flex;
   order: 1;
-  color: darkgray;
+  color: white;
   background-color: #363636;
   height: 70px;
   flex-wrap: wrap;
-  align-content: center;
   justify-content: space-between;
 }
 div.vagabond-navbar a {
   color: white;
+  margin: auto 0px auto 25px;
 }
 div.vagabond-navbar #vagabondTitle {
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
-  font-size: 30px;
+  font-size: 25px;
+  padding-top: 10px;
   color: white;
 }
 div.vagabond-navbar .logoAndTitle {
   display: flex;
+  margin-left: 25px;
 }
 div.vagabond-navbar svg.icon {
-  margin-left: 25px;
+  margin: auto 0px auto 25px;
+  color: white;
 }
 
 #container-root {
@@ -145,6 +162,15 @@ div.vagabond-navbar svg.icon {
   flex-direction: column;
   width: 30%;
   transition: visibility 1s ease-in-out;
+}
+#sidebar-left #profile-pic, #sidebar-right #profile-pic {
+  width: 200px;
+  height: 200px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 50%;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
 #container-center {
@@ -248,6 +274,12 @@ div.vagabond-navbar svg.icon {
   }
   div.vagabond-navbar svg.icon {
     margin: 0;
+  }
+
+  .modal-content {
+    width: 100%;
+    height: 100%;
+    border-radius: 0px;
   }
 }
 #compose-note {
@@ -356,9 +388,40 @@ div.vagabond-navbar svg.icon {
   width: 64px;
 }
 .note .content {
-  margin: 0px 10px 0px 10px;
+  margin: 0px 15px 0px 15px;
   word-wrap: anywhere;
+  color: #454545;
   width: 100%;
+}
+.note .content .user-and-time {
+  display: flex;
+  height: 20px;
+  align-items: baseline;
+}
+.note .content .user-and-time .handle {
+  font-weight: bold;
+  color: #363636;
+}
+.note .content .user-and-time .time {
+  display: flex;
+  margin-left: 8px;
+  color: #495057;
+  font-size: 13px;
+}
+.note .content .info {
+  margin: 10px 0px 10px 0px;
+}
+.note .note-icon {
+  width: 15px;
+  height: 15px;
+  margin-right: 5px;
+  transition: fill 0.1s ease-in-out;
+}
+.note .note-icon:hover {
+  fill: #e9ecef;
+}
+.note .note-icon:active {
+  fill: #339CFE;
 }
 
 #root {
