@@ -63,6 +63,7 @@ const Note = (props) => {
                      style={{borderRadius:'50%'}}
                 />
             </div>
+
             <div class="content">
                 <div className="user-and-time">
                     <div className="handle" onClick={openProfile}>Username</div>
@@ -91,7 +92,6 @@ const Note = (props) => {
             </div>
         </div>
     );
-
 }
 
 export default Note;
