@@ -41,6 +41,8 @@ const SignIn = () => {
             .then((res) => {
                 store.dispatch({ type: 'SET_SESSION', session: { ...store.getState().session, ...res.data } });
             }).catch(handleError);
+        store.dispatch(updateSignIn(false));
+
     }
 
     const validationSchema = Yup.object().shape({

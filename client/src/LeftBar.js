@@ -31,8 +31,19 @@ const LeftBar = (props) => {
                 </div>
                 {
                     visible &&
-                    <div id="leftBar" className="bar">
-                        <div>Profile Stuff</div>
+                    <div id="leftBar" className="bar" style={{display:'flex',flexDirection:'column',justifyContent:'flex-start',alignItems:'center'}}>
+                        <div id="profile-pic" style={{backgroundImage:'url(\"https://www.treehugger.com/thmb/7g7LQAnUZcEWSThwdvIlFt2u2G0=/4560x2565/smart/filters:no_upscale()/duckling-close-up-500315849-572917c93df78ced1f0b99ec.jpg\")'}}></div>
+                        <h1 className="dark">lilDuckie_</h1>
+                        <div id="counts-parent" style={{display:'flex',justifyContent:'space-around',width:'80%',marginTop:'10px'}}>
+                            <div id="following-parent" style={{display:'flex',alignItems:'center',flexDirection:'column'}}>
+                                <h1 className="dark">123</h1>
+                                <div>Following</div>
+                            </div>
+                            <div id="followers-parent" style={{display:'flex',alignItems:'center',flexDirection:'column'}}>
+                                <h1 className="dark">3443</h1>
+                                <div>Followers</div>
+                            </div>
+                        </div>
                     </div>
                 }
             </div>
