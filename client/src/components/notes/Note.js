@@ -57,44 +57,42 @@ const Note = (props) => {
 
 
     return (
-        <div onClick={openNote} className="vagabond-tile note" style={{ padding: '15px' }}>
-            <div className="pfp-container">
-                <img onClick={openProfile} src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
-                    width="100%"
-                    height="auto"
-                    style={{ borderRadius: '50%' }}
-                />
+        <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
+        <div className="pfp-container">
+            <img onClick={openProfile} src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
+                 width="100%"
+                 height="auto"
+                 style={{borderRadius:'50%'}}
+            />
+        </div>
+        <div className="content">
+            <div className="user-and-time">
+                <div className="handle" onClick={openProfile}>Username</div>
+                <div className="time">3h</div>
             </div>
-
-            <div class="content">
-                <div className="user-and-time">
-                    <div className="handle" onClick={openProfile}>Username</div>
-                    <div className="time">3h</div>
-                </div>
-                <div className="info">
-                    tweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetete
+            <div className="info">
+                tweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetete
             </div>
-                <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
-                    <div style={style}>
-                        <Heart onClick={handleLike} className="note-icon" />1234
+            <div className="icon-bar-horizontal" style={{justifyContent:'space-between'}}>
+                <div style={style}>
+                    <Heart onClick={handleLike} className="note-icon" />1234
                 </div>
-                    <div style={style}>
-                        <ThumbsDown onClick={handleDislike} className="note-icon" />1234
+                <div style={style}>
+                    <ThumbsDown onClick={handleDislike} className="note-icon" />1234
                 </div>
-                    <div style={style}>
-                        <MessageSquare onClick={handleComment} className="note-icon" />1234
+                <div style={style}>
+                    <MessageSquare onClick={handleComment} className="note-icon" />1234
                 </div>
-                    <div style={style}>
-                        <ArrowUpRight onClick={handleShare} className="note-icon" />1234
+                <div style={style}>
+                    <ArrowUpRight onClick={handleShare} className="note-icon" />1234
                 </div>
-                </div>
-            </div>
-            <div class="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
-                <MoreVertical onClick={handleMore} className="note-icon" style={{ width: '20px', height: '20px' }} />
             </div>
         </div>
+        <div className="icon-bar-vertical" style={{justifyContent:'flex-start'}}>
+            <MoreVertical onClick={handleMore} className="note-icon" style={{width:'20px',height:'20px'}}/>
+        </div>
+    </div>
     );
-
 }
 
 export default Note;

@@ -9,6 +9,45 @@ body {
   height: 40px;
   border-radius: 5px;
 }
+
+.interaction {
+  display: flex;
+  flex-direction: row;
+  min-height: 60px;
+  border-radius: 5px;
+  background-color: white;
+  color: black;
+  margin: 10px auto 10px auto;
+  font-weight: lighter;
+  justify-content: space-between;
+  align-items: center;
+}
+.interaction:hover {
+  cursor: pointer;
+}
+
+.notification-icon {
+  stroke: #0085FF;
+  stroke-width: 0.35mm;
+  fill: #72BBFF;
+}
+
+.mention {
+  border-radius: 5px;
+  background-color: white;
+  font-weight: lighter;
+}
+.mention .reference-note {
+  width: 80%;
+  margin: 0 auto 0 auto;
+  padding-bottom: 30px;
+  font-size: 15px;
+  color: gray;
+}
+.mention:hover {
+  cursor: pointer;
+}
+
 /*=-=-=-=-=-=-=-=-=-=-=-=- SHOULD BE NEW SCSS FILE ONLY FOR POPUP-MODAL STUFF, BUT TEMPORARILY HERE*/
 .modal-dialog {
   background-color: rgba(0, 0, 0, 0.75);
@@ -98,7 +137,6 @@ body {
   text-decoration: underline;
   text-decoration-color: #339CFE;
 }
-
 .modal-content form .signup-toggler:hover {
   text-decoration: none;
   cursor: pointer;
@@ -143,12 +181,10 @@ div.vagabond-navbar #vagabondTitle {
   padding-top: 10px;
   color: white;
 }
-
 div.vagabond-navbar .logoAndTitle {
   display: flex;
   margin-left: 25px;
 }
-
 div.vagabond-navbar svg.icon {
   margin: auto 0px auto 25px;
   color: white;

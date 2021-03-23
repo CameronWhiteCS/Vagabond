@@ -5,6 +5,7 @@ import Note from  '../notes/Note.js'
 
 
 const Home = () => {
+    
     return (
         <div id="homeBody">
             <h1>Post</h1>
