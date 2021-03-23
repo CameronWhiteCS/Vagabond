@@ -40,8 +40,9 @@ const SignIn = () => {
         axios.post('/api/v1/signin', formik.values)
             .then((res) => {
                 store.dispatch({ type: 'SET_SESSION', session: { ...store.getState().session, ...res.data } });
+                store.dispatch(updateSignIn(false));
             }).catch(handleError);
-        store.dispatch(updateSignIn(false));
+
 
     }
 

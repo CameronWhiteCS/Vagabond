@@ -33,7 +33,7 @@ const Note = (props) => {
         // Show dropdown menu of more options
     }
 
-    const handleShare  = () => {
+    const handleShare = () => {
         console.log("Share")
         // Show options to share
     }
@@ -48,14 +48,14 @@ const Note = (props) => {
         console.log("Open profile")
         // Open profile who made the note
     }
-    
+
     // {props.note.handle}
     // {props.note.published}
 
     // {props.note.content}
-           
-      
-    
+
+
+
     return (
         <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
         <div className="pfp-container">
@@ -65,8 +65,7 @@ const Note = (props) => {
                  style={{borderRadius:'50%'}}
             />
         </div>
-
-        <div class="content">
+        <div className="content">
             <div className="user-and-time">
                 <div className="handle" onClick={openProfile}>Username</div>
                 <div className="time">3h</div>
@@ -89,7 +88,7 @@ const Note = (props) => {
                 </div>
             </div>
         </div>
-        <div class="icon-bar-vertical" style={{justifyContent:'flex-start'}}>
+        <div className="icon-bar-vertical" style={{justifyContent:'flex-start'}}>
             <MoreVertical onClick={handleMore} className="note-icon" style={{width:'20px',height:'20px'}}/>
         </div>
     </div>
