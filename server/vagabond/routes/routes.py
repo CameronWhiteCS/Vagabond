@@ -5,12 +5,12 @@
 
 import requests
 
-from flask import make_response, request, session
+from flask import make_response, request, session, jsonify
 
 from cerberus import Validator
 
 from vagabond.__main__ import app, db
-from vagabond.models import User, Actor
+from vagabond.models import User, Actor, Notification
 from vagabond.config import config
 
 
@@ -160,4 +160,29 @@ def webfinger_federated():
     except:
         return error('An error occurred while attempting to look up the specified user.')
     
+    
+@app.route('/api/v1/notifications', methods=['GET', 'POST'])
+@require_signin
+def route_notifications(user):
+    actor = user.primary_actor
+    if request.method == 'GET':
+        notifications = db.session.query(Notification).filter(Notification.actor_id == actor.id).all()
+        output = []
+        for notification in notifications:
+            output.append(notification.to_dict())
+        return make_response(jsonify(output))
+    elif request.method == 'POST':
+        request_data = request.get_json()
+        print(request_data)
+        if request_data['action'] == 'delete':
+            notification = db.session.query(Notification).get(int(request_data['id']))
+            if notification is not None:
+                db.session.delete(notification)
+                db.session.commit()
+                return make_response('', 200)
+        elif request_data['action'] == 'delete_all':
+            notifications = db.session.query(Notification).filter(Notification.actor_id == actor.id).delete()
+            db.session.commit()
+            return make_response('', 200)
+
 

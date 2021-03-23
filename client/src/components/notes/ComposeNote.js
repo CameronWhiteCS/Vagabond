@@ -31,7 +31,7 @@ const Compose = () => {
 
         const args = {
             type: 'Note',
-            content: values.content,
+            content: `<p>${values.content}</p>`,
             published: new Date().toISOString(),
             to: ['https://www.w3.org/ns/activitystreams#Public'],
             cc: [`${config.apiUrl}/actors/${actorName}/followers`]

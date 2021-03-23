@@ -71,7 +71,7 @@ const Navigation = () => {
 
                 {
                     session.signedIn && 
-                    <Link to="/notificationCenter" title="Bell">
+                    <Link to="/notifications" title="Bell">
                         <Bell className="icon"/>
                     </Link>
                 }
