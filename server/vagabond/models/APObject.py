@@ -16,8 +16,7 @@ class APObjectRecipient(db.Model):
 
     ap_object = db.relationship('APObject', backref='recipients')
 
-    def __init__(self, ap_object, method, recipient):
-        self.ap_object = ap_object
+    def __init__(self, method, recipient):
         self.method = method
         self.recipient = recipient
 
@@ -76,10 +75,11 @@ class APObject(db.Model):
 
         if hasattr(self, 'recipients'):
             for recipient in self.recipients:
-                if output.get(recipient.method) is None:
-                    output[recipient.method] = [recipient.recipient]
-                else:
-                    output[recipient.method].append(recipient.recipient)
+                
+                if recipient.method not in output:
+                    output[recipient.method] = []
+                
+                output[recipient.method].append(recipient.recipient)
 
 
 
@@ -97,7 +97,7 @@ class APObject(db.Model):
         if method != 'to' and method !='bto' and method != 'cc' and method != 'bcc':
             raise Exception("Only acceptable values for APObject#add_recipient are 'to', 'bto', 'cc', and 'bcc'")
 
-        self.recipients.append(APObjectRecipient(self, method, recipient))
+        self.recipients.append(APObjectRecipient(method, recipient))
 
 
     def add_all_recipients(self, obj: dict):

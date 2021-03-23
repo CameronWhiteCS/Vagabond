@@ -10,22 +10,37 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow
+from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy
 from vagabond.routes import error, require_signin
 from vagabond.config import config
 from vagabond.crypto import require_signature, signed_request
 from vagabond.util import resolve_ap_object
 
+import json
 
-def handle_follow():
-    pass
+def deliver(actor, message):
+    '''
+        Delivers the specified message to the inboxes of the actor's followers
+    '''
+    
+    all_inboxes = []
+
+    shared_inboxes = db.session.query(FollowedBy.follower_shared_inbox.distinct()).filter(FollowedBy.leader_id == actor.id, FollowedBy.follower_shared_inbox != None).all()
+    print(shared_inboxes)
+    for inbox in shared_inboxes:
+        all_inboxes.append(inbox[0])
+
+    unique_inboxes = db.session.query(FollowedBy.follower_inbox.distinct()).filter(FollowedBy.leader_id == actor.id, FollowedBy.follower_shared_inbox == None).all()
+    for inbox in unique_inboxes:
+        all_inboxes.append(inbox[0])
+
+    for inbox in all_inboxes:
+        try:
+            signed_request(actor, message, url=inbox)
+        except:
+            app.logger.error(f'Could not deliver message to the following inbox: {inbox}')
 
 
-'''
-**kwargs used instead of 'user' argument
-to calm down the linter. User argument provided
-by require_signin
-'''
 # TODO: Cerberus validation
 @require_signin
 def post_outbox_c2s(actor_name, user=None):
@@ -58,9 +73,8 @@ def post_outbox_c2s(actor_name, user=None):
         base_activity = Create()
         db.session.add(base_object)
         db.session.add(base_activity)
-        base_activity.object = base_object
         base_activity.add_all_recipients(inbound_object)
-        base_activity.add_all_recipients(inbound_object)
+        base_object.add_all_recipients(inbound_object)
     elif inbound_object['type'] == 'Follow':
         base_activity = Follow()
         db.session.add(base_activity)
@@ -70,17 +84,9 @@ def post_outbox_c2s(actor_name, user=None):
     db.session.flush()
 
 
-    # Set actor for activity
+    # Set actor ---> activity relationship
     base_activity.set_actor(actor)
 
-    # Set activity ----> object relationship
-    if base_object is None:
-        base_activity.set_object(inbound_object['object'])
-    else:
-        base_activity.set_object(base_object)
-
-    # Set actor for activity
-    base_activity.set_actor(actor)
 
     # Set activity ----> object relationship
     if base_object is None:
@@ -106,6 +112,8 @@ def post_outbox_c2s(actor_name, user=None):
         new_follow = Following(actor.id, leader['id'], leader['followers'])
         db.session.add(new_follow)
         signed_request(actor, base_activity.to_dict(), leader['inbox'])
+
+    deliver(actor, base_activity.to_dict())
 
     db.session.commit()
 
