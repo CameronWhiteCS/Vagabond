@@ -3,10 +3,8 @@ import { Switch, Route } from 'react-router-dom';
 
 import Error404 from '../static/Error404.js';
 import About from '../static/About.js';
-import SignIn from '../session/SignIn.js';
 import Home from '../static/Home.js'
 import NotificationCenter from '../static/NotificationCenter.js'
-import SignUp from '../session/SignUp.js';
 import ViewActors from '../session/ViewActors.js';
 import ComposeNote from '../notes/ComposeNote.js';
 import Feed from '../Feed.js';
@@ -37,7 +35,7 @@ const Routes = () => {
             <Route exact path="/compose" render={() => <ComposeNote />} />
             <Route exact path="/feed" render={() => <Feed />} />
             <Route exact path="/follow" render={() => <Follow />} />
-            <Route exact path="/notificationCenter" render={() => <NotificationCenter />} />
+            <Route exact path="/notifications" render={() => <NotificationCenter />} />
             <Route render={() => <Error404 />} />
         </Switch>
     );

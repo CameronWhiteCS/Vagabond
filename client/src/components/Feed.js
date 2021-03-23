@@ -7,12 +7,12 @@ import {handleError} from '../reducer/reducer.js';
 
 const Feed = () => {
 
-    const [notes, setNotes] = useState([]);
+    const [activities, setActivities] = useState([]);
 
     useEffect(() => {
-        axios.get('/api/v1/feed')
+        axios.get('/api/v1/inbox/1')
         .then((res) => {
-            setNotes(res.data);
+            setActivities(res.data.orderedItems);
         })
         .catch(handleError)
     }, []);
@@ -20,8 +20,10 @@ const Feed = () => {
     return (
         <>
             {
-                notes.map((note) => {
-                    return <Note note={note} />
+                activities.map((activity) => {
+                    if (activity.type === 'Create' && activity.object.type === 'Note') {
+                        return <Note activity={activity} />
+                    } 
                 })
             }
         </>

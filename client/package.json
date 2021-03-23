@@ -1,5 +1,5 @@
 {
-  "proxy":"http://127.0.0.1:1234",
+  "proxy": "http://127.0.0.1:1234",
   "name": "vagabond-client",
   "version": "0.1.0",
   "private": true,
@@ -17,6 +17,7 @@
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.1",
     "redux": "^4.0.5",
+    "sanitize-html": "^2.3.3",
     "web-vitals": "^0.2.4",
     "yup": "^0.32.8"
   },

@@ -1,4 +1,4 @@
-import { Form, Modal, Button, Alert } from 'react-bootstrap';
+import { Form, Modal, Button } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { username as usernameRegex, actor as actorRegex, password as passwordRegex } from '../../util/regex.js';

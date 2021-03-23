@@ -5,6 +5,8 @@ import { ReactComponent as MessageSquare } from '../../icon/message-square.svg';
 import { ReactComponent as ArrowUpRight } from '../../icon/arrow-up-right.svg';
 import { ReactComponent as MoreVertical } from '../../icon/more-vertical.svg';
 
+import sanitizeHtml from 'sanitize-html';
+
 const Note = (props) => {
 
     const style = {
@@ -59,19 +61,20 @@ const Note = (props) => {
     return (
         <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
         <div className="pfp-container">
-            <img onClick={openProfile} src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
-                 width="100%"
-                 height="auto"
-                 style={{borderRadius:'50%'}}
+            <img onClick={openProfile}
+                src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
+                width="100%"
+                height="auto"
+                style={{borderRadius:'50%'}}
+                alt="PFP"
             />
         </div>
         <div className="content">
             <div className="user-and-time">
-                <div className="handle" onClick={openProfile}>Username</div>
+                <div className="handle" onClick={openProfile}>{props.activity.attributedTo}</div>
                 <div className="time">3h</div>
             </div>
-            <div className="info">
-                tweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetete
+            <div className="info" dangerouslySetInnerHTML={{__html: sanitizeHtml(props.activity.object.content)}}>
             </div>
             <div className="icon-bar-horizontal" style={{justifyContent:'space-between'}}>
                 <div style={style}>

@@ -6,7 +6,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse
@@ -42,7 +42,6 @@ def modify_follow(actor, activity, obj):
 
     db.session.delete(follow_activity)
     
-
     db.session.commit()
 
     return make_response('', 200)
@@ -87,11 +86,59 @@ def accept_inbound_follow(activity, obj):
     except:
         return error('@@@@@@@@@@@', 400)
 
+
+
     new_followed_by = FollowedBy(leader.id, follower['id'], follower_inbox, follower_shared_inbox)
     db.session.add(new_followed_by)
+
+
+    follower_username = follower['id']
+    if 'preferredUsername' in follower:
+        follower_username = follower['preferredUsername']
+
+    db.session.add(Notification(leader, f'{follower_username} has followed you', 'Follow'))
+
     db.session.commit()
 
     return make_response('', 201)
+
+
+def handle_mentions(activity, obj):
+    '''
+        Takes the incoming activity (and possibly object) and notifies
+        the user if he's been cc'd, bcc'd, to'd, or bto'd for certain kinds of activities
+
+        The notification is flished to the database but not commited
+    '''
+
+    activity_recipients = []
+    object_recipients = []
+
+    public_url = 'https://www.w3.org/ns/activitystreams#Public'
+    keys = ['to', 'bto', 'cc', 'bcc']
+
+    for key in keys:
+        if key in activity:
+            if isinstance(activity[key], list) is False:
+                activity[key] = [activity[key]]
+            for value in activity[key]:
+                if value != public_url:
+                    activity_recipients.append(value)
+        if obj is not None and key in obj:
+            if isinstance(obj[key], list) is False:
+                obj[key] = [obj[key]]
+            for value in obj[key]:
+                if value != public_url:
+                    object_recipients.append(value)
+
+    if activity['type'] == 'Create' and obj['type'] == 'Note':
+        for recipient in object_recipients:
+            api_url = config['api_url']
+            recipient = recipient.replace(f'{api_url}/actors/', '')
+            actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == recipient.lower()).first()
+            if actor is None:
+                continue
+            db.session.add(Notification(actor, f'{activity["actor"]} mentioned you. ', 'Mention'))
 
 
 
@@ -131,6 +178,11 @@ def new_ob_object(activity, obj, recipient=None):
         if obj['type'] == 'Note':
             base_object = Note()
 
+    
+    # The user may need to be notified if a message
+    # comes in and he's been to'd, bto'd, cc'd, or bcc'd
+    handle_mentions(activity, obj)
+
     #Assign common properties to the generic activity
     db.session.add(base_activity)
     db.session.flush()
@@ -154,6 +206,7 @@ def new_ob_object(activity, obj, recipient=None):
             base_object.content = obj['content']
 
     db.session.commit()
+
     return make_response('', 200)
 
 
@@ -239,7 +292,7 @@ def get_inbox_paginated(actor, page, personalized):
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
         'id': f'{root_url}/{page}',
-        'partOf': f'{root_url}/inbox',
+        'partOf': f'{root_url}',
         'type': 'OrderedCollectionPage',
         'prev': f'{root_url}/{page-1}',
         'next': f'{root_url}/{page+1}',
