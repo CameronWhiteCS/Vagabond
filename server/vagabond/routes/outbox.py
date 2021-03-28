@@ -10,7 +10,7 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy
+from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy, Like, Liked
 from vagabond.routes import error, require_signin
 from vagabond.config import config
 from vagabond.crypto import require_signature, signed_request
@@ -113,6 +113,17 @@ def post_outbox_c2s(actor_name, user=None):
         db.session.add(new_follow)
         signed_request(actor, base_activity.to_dict(), leader['inbox'])
 
+    elif inbound_object['type'] == 'Like':
+        in_obj = resolve_ap_object(inbound_object['object'])
+
+        existing_like = db.session.query(Liked).filter().first()
+        
+        if existing_like is not None and existing_like.approved is True:
+            return error('You have already liked.')
+
+        new_like = Liked(in_obj['liked'])
+        db.session.add(new_like)
+        
     deliver(actor, base_activity.to_dict())
 
     db.session.commit()

@@ -8,3 +8,4 @@ class APObjectType(enum.Enum):
     DELETE = 'Delete'
     FOLLOW = 'Follow'
     ACTIVITY = 'Activity'
+    LIKE = 'Like'
