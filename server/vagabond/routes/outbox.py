@@ -120,10 +120,9 @@ def post_outbox_c2s(actor_name, user=None):
         in_obj = resolve_ap_object(inbound_object['object'])
 
         if in_obj['type'] == 'Create' or in_obj['type'] == 'Note':
-            new_like = in_obj['liked']
-            db.session.add(new_like)
+            base_activity.set_object(inbound_object['object'])
         else:
-            return error('object has to a valid type.')
+            return error('object has to be a valid type.')
         
     deliver(actor, base_activity.to_dict())
 
