@@ -120,13 +120,6 @@ class APObject(db.Model):
                 for _value in value:
                     self.add_recipient(key, _value)
 
-    def add_to_inbox(self, actor):
-        '''
-            actor: Vagabond.models.Actor | int
-            Puts this object into the inbox of a local actor.
-
-        '''
-
 
     def attribute_to(self, author):
         '''

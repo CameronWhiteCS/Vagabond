@@ -4,17 +4,17 @@ import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Form, Button } from 'react-bootstrap';
 
-import { ReactComponent as PaperClip } from '../../icon/paperclip.svg'
-import { ReactComponent as AlertTriangle } from '../../icon/alert-triangle.svg'
-import { ReactComponent as Eye } from '../../icon/eye.svg'
-import { ReactComponent as Archive } from '../../icon/archive.svg'
-import { ReactComponent as Navigation } from '../../icon/navigation.svg'
+import { ReactComponent as PaperClip } from 'icon/paperclip.svg'
+import { ReactComponent as AlertTriangle } from 'icon/alert-triangle.svg'
+import { ReactComponent as Eye } from 'icon/eye.svg'
+import { ReactComponent as Archive } from 'icon/archive.svg'
+import { ReactComponent as Navigation } from 'icon/navigation.svg'
 
-import { handleError } from '../../reducer/reducer.js';
-import TextArea from '../vagabond/TextArea.js';
-import config from '../../config/config.js';
+import { handleError } from 'reducer/reducer.js';
+import TextArea from 'components/vagabond/TextArea.js';
+import config from 'config/config.js';
 
-import { store } from '../../reducer/reducer.js';
+import { store } from 'reducer/reducer.js';
 
 const Compose = () => {
 
