@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Button } from 'react-bootstrap';
 import axios from 'axios';
-import { store, handleError } from '../reducer/reducer.js';
-import config from '../config/config.js';
+import { store, handleError, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
 
 const Follow = (props) => {
 
@@ -15,7 +14,6 @@ const Follow = (props) => {
     })
 
     const processWebfingerResponse = (res) => {
-        console.log(res);
         let foreignActor = undefined;
         res.data.links.every((link) => {
             if (link.rel === 'self') {
@@ -44,9 +42,14 @@ const Follow = (props) => {
 
     const onSubmit = (e) => {
         e.preventDefault();
+        const loadingReason = 'Looking up user';
+        store.dispatch(addLoadingReason(loadingReason));
         axios.get(`/api/v1/webfinger?username=${username}&hostname=${hostname}`)
             .then(processWebfingerResponse)
             .catch(handleError)
+            .finally(() => {
+                store.dispatch(removeLoadingReason(loadingReason));
+            });
     }
 
     return (

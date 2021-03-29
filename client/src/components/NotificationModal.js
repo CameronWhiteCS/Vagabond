@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { store, initialState, hideNotification } from '../reducer/reducer.js';
+import { store, hideNotification } from 'reducer/reducer.js';
 import {Modal, Button} from 'react-bootstrap';
 
 const NotificationModal = () => {
 
-    const [notifications, setNotifications] = useState(initialState.notifications);
+    const [notifications, setNotifications] = useState([]);
 
     store.subscribe(() => {
         setNotifications(store.getState().notifications);

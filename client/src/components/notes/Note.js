@@ -1,9 +1,9 @@
 import React from 'react';
-import { ReactComponent as Heart } from '../../icon/heart.svg';
-import { ReactComponent as ThumbsDown } from '../../icon/thumbs-down.svg';
-import { ReactComponent as MessageSquare } from '../../icon/message-square.svg';
-import { ReactComponent as ArrowUpRight } from '../../icon/arrow-up-right.svg';
-import { ReactComponent as MoreVertical } from '../../icon/more-vertical.svg';
+import { ReactComponent as Heart } from 'icon/heart.svg';
+import { ReactComponent as ThumbsDown } from 'icon/thumbs-down.svg';
+import { ReactComponent as MessageSquare } from 'icon/message-square.svg';
+import { ReactComponent as ArrowUpRight } from 'icon/arrow-up-right.svg';
+import { ReactComponent as MoreVertical } from 'icon/more-vertical.svg';
 
 import sanitizeHtml from 'sanitize-html';
 
@@ -72,7 +72,7 @@ const Note = (props) => {
         <div className="content">
             <div className="user-and-time">
                 <div className="handle" onClick={openProfile}>{props.activity.attributedTo}</div>
-                <div className="time">3h</div>
+                <div className="time">{new Date(props.activity.published).toUTCString()}</div>
             </div>
             <div className="info" dangerouslySetInnerHTML={{__html: sanitizeHtml(props.activity.object.content)}}>
             </div>

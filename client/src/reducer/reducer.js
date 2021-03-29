@@ -7,8 +7,14 @@ const initialState = {
         actors: [],
         currentActor: {}
     },
-    showSignIn: false,
-    showSignUp: false
+    showSignIn: false, // Whether or not the sign in modal is visible
+    showSignUp: false,  // Whther or not the sign up modal is visible
+    inbox: { //used by Feed.js 
+        items: [],
+        nextPage: undefined,
+        totalItems: undefined
+    },
+    loadingReasons: [] //List of reasons why the application is currently loading and blocking user input
 };
 
 const reducer = (state = initialState, action) => {
@@ -20,22 +26,34 @@ const reducer = (state = initialState, action) => {
         });
         const newState = { ...state, notifications: newNotifications }
         return newState;
-    } 
+    }
     else if (action.type === 'HIDE_NOTIFICATION') {
         const newNotifications = [...state.notifications];
         newNotifications.shift();
         const newState = { ...state, notifications: newNotifications }
         return newState;
-    } 
+    }
     else if (action.type === 'SET_SESSION') {
-        return { ...state, session: action.session}
-    } 
+        return { ...state, session: action.session }
+    }
     else if (action.type === 'UPDATE_SIGNIN') {
-        return { ...state, showSignIn: action.show}
-    } 
+        return { ...state, showSignIn: action.show }
+    }
     else if (action.type === 'UPDATE_SIGNUP') {
-        return { ...state, showSignUp: action.show}
-    } 
+        return { ...state, showSignUp: action.show }
+    } else if (action.type === 'SET_INBOX') {
+        return { ...state, inbox: action.inbox }
+    } else if (action.type === 'ADD_LOADING_REASON') {
+        return { ...state, loadingReasons: [...state.loadingReasons, action.reason] }
+    } else if (action.type === 'REMOVE_LOADING_REASON') {
+        const newLoadingReasons = [];
+        state.loadingReasons.forEach((reason) => {
+            if (reason !== action.reason) {
+                newLoadingReasons.push(reason);
+            }
+        })
+        return { ...state, loadingReasons: newLoadingReasons };
+    }
     else {
         return state;
     }
@@ -44,6 +62,11 @@ const reducer = (state = initialState, action) => {
 const store = createStore(reducer, initialState);
 store.getState();
 
+/**
+ * Used to update the visibility of the sign in modal.
+ * @param {*} show Whether or not the sign in modal is visible
+ * @returns void
+ */
 const updateSignIn = (show) => {
     return {
         type: 'UPDATE_SIGNIN',
@@ -51,6 +74,11 @@ const updateSignIn = (show) => {
     };
 };
 
+/**
+ * Used to update the visibility of the sign up modal.
+ * @param {*} show Whether or not the sign up modal is visible
+ * @returns void
+ */
 const updateSignUp = (show) => {
     return {
         type: 'UPDATE_SIGNUP',
@@ -58,6 +86,12 @@ const updateSignUp = (show) => {
     };
 };
 
+/**
+ * Used to add a notification to the notification queue.
+ * @param {*} title Title of the notification
+ * @param {*} message Content of the notification
+ * @returns void
+ */
 const createNotification = (title, message) => {
     return {
         type: 'CREATE_NOTIFICATION',
@@ -66,14 +100,24 @@ const createNotification = (title, message) => {
     };
 };
 
+/**
+ * Dismisses the current notification at the front of the queue. 
+ * @returns void
+ */
 const hideNotification = () => {
     return {
         type: 'HIDE_NOTIFICATION'
     };
 };
 
+/**
+ * Provides a standard way to notify the user of server-side errors.
+ * This function is most often provided as an argument to the .catch()
+ * function when performing an HTTP request with Axios. 
+ * @param {*} err Axios error object
+ */
 const handleError = (err) => {
-    if(err.response) {
+    if (err.response) {
         store.dispatch(createNotification(`Error: ${err.response.status}`, err.response.data));
     } else {
         store.dispatch(createNotification('Error', 'Unknown error.'));
@@ -81,4 +125,18 @@ const handleError = (err) => {
     }
 }
 
-export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp }
+const addLoadingReason = (reason) => {
+    return {
+        type: 'ADD_LOADING_REASON',
+        reason: reason
+    }
+}
+
+const removeLoadingReason = (reason) => {
+    return {
+        type: 'REMOVE_LOADING_REASON',
+        reason: reason
+    }
+}
+
+export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp, addLoadingReason, removeLoadingReason }

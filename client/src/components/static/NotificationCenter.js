@@ -3,13 +3,13 @@ import axios from 'axios';
 
 import {Button} from 'react-bootstrap'; 
 
-import { ReactComponent as UserPlus } from '../../icon/user-plus.svg'
-import { ReactComponent as Heart } from '../../icon/heart.svg';
-import { ReactComponent as ThumbsDown } from '../../icon/thumbs-down.svg';
-import { ReactComponent as MessageSquare } from '../../icon/message-square.svg';
-import { ReactComponent as AtSign } from '../../icon/at-sign.svg';
+import { ReactComponent as UserPlus } from 'icon/user-plus.svg'
+import { ReactComponent as Heart } from 'icon/heart.svg';
+import { ReactComponent as ThumbsDown } from 'icon/thumbs-down.svg';
+import { ReactComponent as MessageSquare } from 'icon/message-square.svg';
+import { ReactComponent as AtSign } from 'icon/at-sign.svg';
 
-import { handleError } from "../../reducer/reducer";
+import { handleError } from "reducer/reducer";
 
 
 const NotificationCenter = () => {

@@ -1,16 +1,15 @@
 
-import { ReactComponent as LogoHome } from '../../icon/home.svg'
-import { ReactComponent as LogoUsers } from '../../icon/users.svg'
-import { ReactComponent as SignIn } from '../../icon/sign-in.svg'
-import { ReactComponent as SignOut } from '../../icon/sign-out.svg'
-import { ReactComponent as Bell } from '../../icon/bell.svg'
-import { ReactComponent as Inbox } from '../../icon/inbox.svg'
-import { ReactComponent as Logo } from './Vagabond_Logo.svg'
-//import { ReactComponent as Info } from '../../icon/info.svg'
-import { ReactComponent as Feather } from '../../icon/feather.svg'
-//import { ReactComponent as Globe } from '../../icon/globe.svg'
+import { ReactComponent as LogoHome } from 'icon/home.svg'
+import { ReactComponent as LogoUsers } from 'icon/users.svg'
+import { ReactComponent as SignIn } from 'icon/sign-in.svg'
+import { ReactComponent as SignOut } from 'icon/sign-out.svg'
+import { ReactComponent as Bell } from 'icon/bell.svg'
+import { ReactComponent as Inbox } from 'icon/inbox.svg';
+import { ReactComponent as Feather } from 'icon/feather.svg';
 
-import { initialState, store, handleError, updateSignIn } from '../../reducer/reducer.js';
+import { ReactComponent as Logo } from 'img/Vagabond_Logo.svg';
+
+import { initialState, store, handleError, updateSignIn } from 'reducer/reducer.js';
 
 import { useState, useEffect } from 'react';
 

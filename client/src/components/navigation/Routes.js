@@ -1,16 +1,16 @@
 import React, { useState, useEffect } from 'react';
 import { Switch, Route } from 'react-router-dom';
 
-import Error404 from '../static/Error404.js';
-import About from '../static/About.js';
-import Home from '../static/Home.js'
-import NotificationCenter from '../static/NotificationCenter.js'
-import ViewActors from '../session/ViewActors.js';
-import ComposeNote from '../notes/ComposeNote.js';
-import Feed from '../Feed.js';
-import Follow from '../Follow.js';
+import Error404 from 'components/static/Error404.js';
+import About from 'components/static/About.js';
+import Home from 'components/static/Home.js'
+import NotificationCenter from 'components/static/NotificationCenter.js'
+import ViewActors from 'components/session/ViewActors.js';
+import ComposeNote from 'components/notes/ComposeNote.js';
+import Feed from 'components/Feed.js';
+import Follow from 'components/Follow.js';
 
-import { store } from '../../reducer/reducer.js';
+import { store } from 'reducer/reducer.js';
 
 const Routes = () => {
 
