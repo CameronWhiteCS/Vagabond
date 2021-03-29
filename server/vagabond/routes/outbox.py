@@ -10,7 +10,7 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy
+from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy, Like
 from vagabond.routes import error, require_signin
 from vagabond.config import config
 from vagabond.crypto import require_signature, signed_request
@@ -78,6 +78,9 @@ def post_outbox_c2s(actor_name, user=None):
     elif inbound_object['type'] == 'Follow':
         base_activity = Follow()
         db.session.add(base_activity)
+    elif inbound_object['type'] == 'Like':
+        base_activity = Like()
+        db.session.add(base_activity)
     else:
         return error('Vagabond does not currently support this type of AcvtivityPub object. :(')
 
@@ -113,6 +116,14 @@ def post_outbox_c2s(actor_name, user=None):
         db.session.add(new_follow)
         signed_request(actor, base_activity.to_dict(), leader['inbox'])
 
+    elif inbound_object['type'] == 'Like':
+        in_obj = resolve_ap_object(inbound_object['object'])
+
+        if in_obj['type'] == 'Create' or in_obj['type'] == 'Note':
+            base_activity.set_object(inbound_object['object'])
+        else:
+            return error('object has to be a valid type.')
+        
     deliver(actor, base_activity.to_dict())
 
     db.session.commit()
