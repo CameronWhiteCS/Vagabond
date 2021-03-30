@@ -11,7 +11,12 @@ const initialState = {
     showSignUp: false,  // Whther or not the sign up modal is visible
     inbox: { //used by Feed.js 
         items: [],
-        nextPage: undefined,
+        nextPage: 1,
+        totalItems: undefined
+    },
+    outbox: {
+        items: [],
+        nextPage: 1,
         totalItems: undefined
     },
     loadingReasons: [] //List of reasons why the application is currently loading and blocking user input
@@ -43,6 +48,8 @@ const reducer = (state = initialState, action) => {
         return { ...state, showSignUp: action.show }
     } else if (action.type === 'SET_INBOX') {
         return { ...state, inbox: action.inbox }
+    } else if (action.type === 'SET_OUTBOX') {
+        return { ...state, outbox: action.outbox }
     } else if (action.type === 'ADD_LOADING_REASON') {
         return { ...state, loadingReasons: [...state.loadingReasons, action.reason] }
     } else if (action.type === 'REMOVE_LOADING_REASON') {

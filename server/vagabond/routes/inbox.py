@@ -191,7 +191,7 @@ def new_ob_object(activity, obj, recipient=None):
     # comes in and he's been to'd, bto'd, cc'd, or bcc'd
     handle_mentions(activity, obj)
 
-    #Assign common properties to the generic activity
+    # Assign common properties to the generic activity
     db.session.add(base_activity)
     db.session.flush()
     base_activity.external_id = activity['id']
@@ -201,7 +201,7 @@ def new_ob_object(activity, obj, recipient=None):
     base_activity.external_object_id = obj['id']
 
 
-    #assign common properties to the generic object
+    # Assign common properties to the generic object
     if base_object is not None:
         db.session.add(base_object)
         db.session.flush()

@@ -10,11 +10,11 @@ from vagabond.routes import error
 @app.route('/api/v1/objects/<int:object_id>')
 def get_note_by_id(object_id):
 
-    ap_object = db.session.query(APObject).filter(
-        db.and_(APObject.id == object_id, APObject.external_id == None)).first()
+    ap_object = db.session.query(APObject).get(object_id)
 
     if ap_object is None:
         return error('Object not found', 404)
+        
     response = make_response(ap_object.to_dict(), 200)
     response.headers['Content-Type'] = 'application/activity+json'
     return response
