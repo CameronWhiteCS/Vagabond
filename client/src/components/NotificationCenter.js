@@ -9,7 +9,7 @@ import { ReactComponent as ThumbsDown } from 'icon/thumbs-down.svg';
 import { ReactComponent as MessageSquare } from 'icon/message-square.svg';
 import { ReactComponent as AtSign } from 'icon/at-sign.svg';
 
-import { handleError } from "reducer/reducer";
+import { store, handleError, addLoadingReason, removeLoadingReason } from "reducer/reducer";
 
 
 const NotificationCenter = () => {
@@ -19,6 +19,8 @@ const NotificationCenter = () => {
     const [showInteractions, setShowInteractions] = useState(true);
 
     useEffect(() => {
+        const loadingReason = 'Fetching notifications';
+        store.dispatch(addLoadingReason(loadingReason));
         axios.get('/api/v1/notifications')
             .then((res) => {
                 let interactions = [];
@@ -34,6 +36,9 @@ const NotificationCenter = () => {
                 setInteractions(interactions);
             })
             .catch(handleError)
+            .finally(() => {
+                store.dispatch(removeLoadingReason(loadingReason));
+            });
     }, []);
 
     const deleteNotification = (notification) => {

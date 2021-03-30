@@ -9,8 +9,8 @@ const Home = () => {
         <div id="homeBody">
             <h1>Post</h1>
             <ComposeNote></ComposeNote>
-            <h1>Feed</h1>
-            <Feed/>
+            <h1>Inbox</h1>
+            <Feed type="inbox"/>
         </div>
       
     );

@@ -1,11 +1,12 @@
 
 import { ReactComponent as LogoHome } from 'icon/home.svg'
-import { ReactComponent as LogoUsers } from 'icon/users.svg'
+import { ReactComponent as Users } from 'icon/users.svg'
 import { ReactComponent as SignIn } from 'icon/sign-in.svg'
 import { ReactComponent as SignOut } from 'icon/sign-out.svg'
 import { ReactComponent as Bell } from 'icon/bell.svg'
 import { ReactComponent as Inbox } from 'icon/inbox.svg';
 import { ReactComponent as Feather } from 'icon/feather.svg';
+import { ReactComponent as Send } from 'icon/send.svg';
 
 import { ReactComponent as Logo } from 'img/Vagabond_Logo.svg';
 
@@ -43,55 +44,53 @@ const Navigation = () => {
     }
 
     return (
-        <div className="vagabond-navbar" style={{padding: '10px'}}>
+        <div className="vagabond-navbar" style={{ padding: '10px' }}>
             <span className="logoAndTitle">
-                <Logo style={{width:'35px', height:'35px', fill:'white', margin:'auto 10px auto 0'}}/>
+                <Logo style={{ width: '35px', height: '35px', fill: 'white', margin: 'auto 10px auto 0' }} />
                 <div id="vagabondTitle">Vagabond</div>
             </span>
-            
-            <span className="icon-bar-horizontal" style={{marginRight:'25px'}}>
-                <Link to="/" title="Home">
-                    <LogoHome className="icon"/>
+
+            <span className="icon-bar-horizontal" style={{ marginRight: '25px' }}>
+                <Link to="/" title="Inbox">
+                    <Inbox className="icon" />
                 </Link>
-                
                 {
                     session.signedIn &&
-                    <Link to="/actors" title="All actors">
-                        <LogoUsers className="icon"/>
+                    <Link to="/outbox" title="Outbox">
+                        <Send className="icon" />
                     </Link>
                 }
-
                 {
-                    session.signedIn && 
-                    <Link to="/compose" title="Compose Note">
+                    session.signedIn &&
+                    <Link to="/compose" title="Compose note">
                         <Feather className="icon" />
                     </Link>
                 }
-
                 {
-                    session.signedIn && 
-                    <Link to="/notifications" title="Bell">
-                        <Bell className="icon"/>
+                    session.signedIn &&
+                    <Link to="/notifications" title="Notifications">
+                        <Bell className="icon" />
                     </Link>
                 }
                 {
-                    session.signedIn && 
-                    <Link to="/inbox" title="Inbox">
-                        <Inbox className="icon"/>
+                    session.signedIn &&
+                    <Link to="/actors" title="My actors">
+                        <Users className="icon" />
                     </Link>
                 }
                 {
                     !session.signedIn &&
-                    <SignIn className="icon" onClick={openSignIn}/>
+                    <SignIn className="icon" onClick={openSignIn} />
                 }
                 {
                     session.signedIn &&
                     <Link onClick={signOut} to="#" title="Sign out">
-                        <SignOut className="icon"/>
+                        <SignOut className="icon" />
                     </Link>
                 }
+
             </span>
-            </div>
+        </div>
     );
 
 }

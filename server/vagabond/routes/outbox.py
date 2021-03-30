@@ -82,7 +82,7 @@ def post_outbox_c2s(actor_name, user=None):
         base_activity = Like()
         db.session.add(base_activity)
     else:
-        return error('Vagabond does not currently support this type of AcvtivityPub object. :(')
+        return error('Vagabond does not currently support this type of AcvtivityPub object.')
 
     db.session.flush()
 
@@ -108,7 +108,7 @@ def post_outbox_c2s(actor_name, user=None):
         )).first()
 
         if existing_follow is not None and existing_follow.approved is True:
-                return error('You are already following this actor.')
+            return error('You are already following this actor.')
 
         new_follow = Following(actor.id, leader['id'], leader['followers'], approved=is_local)
         db.session.add(new_follow)
@@ -128,12 +128,12 @@ def post_outbox_c2s(actor_name, user=None):
             signed_request(actor, base_activity.to_dict(), leader['inbox'])
 
     elif inbound_object['type'] == 'Like':
-        in_obj = resolve_ap_object(inbound_object['object'])
+        liked_object = resolve_ap_object(inbound_object['object'])
 
-        if in_obj['type'] == 'Create' or in_obj['type'] == 'Note':
+        if liked_object['type'] == 'Create' or liked_object['type'] == 'Note':
             base_activity.set_object(inbound_object['object'])
         else:
-            return error('object has to be a valid type.')
+            return error('You cannot like that kind of object.')
         
     deliver(actor, base_activity.to_dict())
 
