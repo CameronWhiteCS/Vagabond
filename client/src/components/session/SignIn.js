@@ -5,7 +5,6 @@ import * as Yup from 'yup';
 import { store, handleError, initialState, updateSignIn, updateSignUp } from '../../reducer/reducer.js';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
-//import { Link } from 'react-router-dom';
 import '../../css/App.css'
 import SignUp from './SignUp.js'
 

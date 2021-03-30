@@ -60,9 +60,9 @@ const NotificationCenter = () => {
                             interactions.map(content => 
                             <div className="interaction">
                                 <div id="interaction-icon-parent" style={{margin:'auto 20px auto 20px'}}>
-                                    { content.type.toLowerCase() == "follow" && <UserPlus className = "notification-icon"/> }
-                                    { content.type.toLowerCase() == "like" && <Heart className = "notification-icon" style={{fill:'#FF6464',stroke:'#E70000'}}/> }
-                                    { content.type.toLowerCase() == "dislike" && <ThumbsDown className = "notification-icon" style={{fill:'#454545',stroke:'#363636'}}/> }
+                                    { content.type.toLowerCase() === "follow" && <UserPlus className = "notification-icon"/> }
+                                    { content.type.toLowerCase() === "like" && <Heart className = "notification-icon" style={{fill:'#FF6464',stroke:'#E70000'}}/> }
+                                    { content.type.toLowerCase() === "dislike" && <ThumbsDown className = "notification-icon" style={{fill:'#454545',stroke:'#363636'}}/> }
                                 </div>
                                 <div style={{width:'100%'}}>
                                     {content.content}
@@ -82,8 +82,8 @@ const NotificationCenter = () => {
                                 <div className="mention">
                                     <div className="interaction">
                                         <div id="interaction-icon-parent" style={{margin:'auto 20px auto 20px'}}>
-                                            { content.type.toLowerCase() == "mention" && <AtSign className = "notification-icon" style={{fill:'none'}}/> }
-                                            { content.type.toLowerCase() == "comment" && <MessageSquare className = "notification-icon"/> }
+                                            { content.type.toLowerCase() === "mention" && <AtSign className = "notification-icon" style={{fill:'none'}}/> }
+                                            { content.type.toLowerCase() === "comment" && <MessageSquare className = "notification-icon"/> }
                                         </div>
                                         <div style={{width:'100%'}}>
                                             {content.content}

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Switch, Route } from 'react-router-dom';
 
 import Error404 from '../static/Error404.js';
+import SearchResults from '../static/SearchResults.js';
 import About from '../static/About.js';
 import SignIn from '../session/SignIn.js';
 import Home from '../static/Home.js'
@@ -37,6 +38,7 @@ const Routes = () => {
             <Route exact path="/compose" render={() => <ComposeNote />} />
             <Route exact path="/feed" render={() => <Feed />} />
             <Route exact path="/follow" render={() => <Follow />} />
+            <Route exact path="/search" render={() => <SearchResults />} />
             <Route exact path="/notificationCenter" render={() => <NotificationCenter />} />
             <Route render={() => <Error404 />} />
         </Switch>

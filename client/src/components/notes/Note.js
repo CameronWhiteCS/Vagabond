@@ -72,7 +72,7 @@ const Note = (props) => {
                 <div className="time">3h</div>
             </div>
             <div className="info">
-                tweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetetetweetwtetetetete
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus et ex ultricies, mattis neque sit amet, tincidunt eros. Fusce et metus at lectus lobortis posuere pharetra ut justo. 
             </div>
             <div className="icon-bar-horizontal" style={{justifyContent:'space-between'}}>
                 <div style={style}>

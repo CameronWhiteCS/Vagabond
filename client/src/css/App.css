@@ -2,6 +2,58 @@ body {
   background-color: #454545;
 }
 
+.icon-bar-horizontal-searching {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  color: #6c757d;
+}
+
+.bar-parent-searching {
+  height: 100%;
+  max-width: 35%;
+  width: 35%;
+}
+
+.search-bar {
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+  height: 90%;
+  border-radius: 10px;
+  width: 100%;
+}
+.search-bar button {
+  height: 80%;
+  margin: auto 20px auto 20px;
+  background-color: rgba(0, 0, 0, 0);
+  border-style: none;
+  color: black;
+  font-weight: 450;
+}
+.search-bar #search-button {
+  background-color: #339CFE;
+  border-radius: 7px;
+  height: 75%;
+  color: white;
+}
+
+.input-part {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  vertical-align: middle;
+}
+.input-part input {
+  background-color: rgba(0, 0, 0, 0);
+  width: 95%;
+}
+.input-part input:focus {
+  outline: none;
+}
+
 .notification-option {
   width: 100%;
   background-color: white;
@@ -167,7 +219,6 @@ div.vagabond-navbar {
   color: white;
   background-color: #363636;
   height: 70px;
-  flex-wrap: wrap;
   justify-content: space-between;
 }
 div.vagabond-navbar a {
@@ -309,6 +360,18 @@ div.vagabond-navbar svg.icon {
   div.vagabond-navbar .icon-bar-horizontal {
     width: 100%;
     justify-content: space-around;
+    margin: 0;
+  }
+  div.vagabond-navbar .icon-bar-horizontal-searching {
+    display: none;
+  }
+  div.vagabond-navbar .bar-parent-searching {
+    height: 100%;
+    max-width: 100%;
+    min-width: 100%;
+  }
+  div.vagabond-navbar .search-bar {
+    width: 100%;
   }
   div.vagabond-navbar svg.icon {
     margin: 0;
