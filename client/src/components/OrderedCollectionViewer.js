@@ -15,6 +15,21 @@ const OrderedCollectionViewer = (props) => {
     const [collection, setCollection] = useState(store.getState().collections[props.id]);
     const [session, setSession] = useState(store.getState().session);
 
+    /**
+     * Takes a URL and removes the domain and protocol from it leaving only the target resource.
+     * Required to avoid CORS issues due to development v production having different domains.
+     * @param {*} url 
+     * @returns 
+     */
+    const stripUrl = (url) => {
+        let output = '';
+        let splits = url.replace('https://', '').replace('http://', '').split('/')
+        for(let i = 1; i < splits.length; i++){
+            output = output + '/' + splits[i]; 
+        }
+        return output;
+    }
+
     store.subscribe(() => {
         setCollection(store.getState().collections[props.id]);
         setSession(store.getState().session);
@@ -42,7 +57,7 @@ const OrderedCollectionViewer = (props) => {
                 const newCollection = {
                     ...collection,
                     items: collection.items === null ? [...res.data.orderedItems] : [...collection.items, ...res.data.orderedItems],
-                    nextPage: res.data.next
+                    nextPage: stripUrl(res.data.next)
                 };
                 store.dispatch({
                     type: 'SET_COLLECTION',
@@ -65,7 +80,7 @@ const OrderedCollectionViewer = (props) => {
                 type: 'SET_COLLECTION',
                 id: props.id,
                 collection: {
-                    nextPage: res.data.first,
+                    nextPage: stripUrl(res.data.first),
                     totalItems: res.data.totalItems,
                     items: null
                 }
