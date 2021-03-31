@@ -6,15 +6,20 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification
 from vagabond.util import resolve_ap_object
 
-from dateutil.parser import parse
+from dateutil.parser import parse as parse_date
 
 import json
 
+'''
+    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+        HELPER FUNCTIONS - SIDE EFFECTS
+    -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+'''
 
-def modify_follow(actor, activity, obj):
+def handle_inbound_accept_reject(actor, activity, obj):
     '''
         Incoming Accept and Reject activites on Follow objects
         have side effects which are handled here
@@ -42,14 +47,12 @@ def modify_follow(actor, activity, obj):
 
     db.session.delete(follow_activity)
     
-
     db.session.commit()
 
     return make_response('', 200)
 
 
-def accept_inbound_follow(activity, obj):
-    #TODO: Notification that you've been followed
+def handle_inbound_follow(activity, obj):
     #TODO: Privacy settings for person being followed
 
     api_url = config['api_url']
@@ -57,7 +60,7 @@ def accept_inbound_follow(activity, obj):
     if obj['id'].find(f'{api_url}/actors/') < 0:
         return error('Invalid actor ID')
 
-    local_actor_name = obj['id'].replace(f'{api_url}/actors/', "").lower()
+    local_actor_name = obj['id'].replace(f'{api_url}/actors/', '').lower()
 
     leader = db.session.query(Actor).filter(db.func.lower(Actor.username) == local_actor_name).first()
 
@@ -85,16 +88,68 @@ def accept_inbound_follow(activity, obj):
     try:
         signed_request(leader, message_body, url=follower_inbox)
     except:
-        return error('@@@@@@@@@@@', 400)
+        return error('An error occurred while processing that follow request.', 400)
+
+
 
     new_followed_by = FollowedBy(leader.id, follower['id'], follower_inbox, follower_shared_inbox)
     db.session.add(new_followed_by)
+
+
+    follower_username = follower['id']
+    if 'preferredUsername' in follower:
+        follower_username = follower['preferredUsername']
+
+    db.session.add(Notification(leader, f'{follower_username} has followed you', 'Follow'))
+
     db.session.commit()
 
     return make_response('', 201)
 
 
+def handle_mentions(activity, obj):
+    '''
+        Takes the incoming activity (and possibly object) and notifies
+        the user if he's been cc'd, bcc'd, to'd, or bto'd for certain kinds of activities
 
+        The notification is flished to the database but not commited
+    '''
+
+    activity_recipients = []
+    object_recipients = []
+
+    public_url = 'https://www.w3.org/ns/activitystreams#Public'
+    keys = ['to', 'bto', 'cc', 'bcc']
+
+    for key in keys:
+        if key in activity:
+            if isinstance(activity[key], list) is False:
+                activity[key] = [activity[key]]
+            for value in activity[key]:
+                if value != public_url:
+                    activity_recipients.append(value)
+        if obj is not None and key in obj:
+            if isinstance(obj[key], list) is False:
+                obj[key] = [obj[key]]
+            for value in obj[key]:
+                if value != public_url:
+                    object_recipients.append(value)
+
+    if activity['type'] == 'Create' and obj['type'] == 'Note':
+        for recipient in object_recipients:
+            api_url = config['api_url']
+            recipient = recipient.replace(f'{api_url}/actors/', '')
+            actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == recipient.lower()).first()
+            if actor is None:
+                continue
+            db.session.add(Notification(actor, f'{activity["actor"]} mentioned you. ', 'Mention'))
+
+
+'''
+    =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+        HELPER FUNCTIONS - OTHER
+    =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+'''
 
 def new_ob_object(activity, obj, recipient=None):
     '''
@@ -102,7 +157,7 @@ def new_ob_object(activity, obj, recipient=None):
             The activity being preformed
         obj: dict
             The object the activity is being done on
-        ?recipient: dict
+        ?recipient: Actor
             the actor whose inbox this activity was POSTed to
 
         Returns: Flask Response object
@@ -121,25 +176,29 @@ def new_ob_object(activity, obj, recipient=None):
     if activity['type'] == 'Create':
         base_activity = Create()
     elif (activity['type'] == 'Accept' or activity['type'] == 'Reject') and obj['type'] == 'Follow' and recipient is not None:
-        return modify_follow(recipient, activity, obj)
+        return handle_inbound_accept_reject(recipient, activity, obj)
     elif activity['type'] == 'Follow':
-        return accept_inbound_follow(activity, obj)
+        return handle_inbound_follow(activity, obj)
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           
-    if obj is not None:
-        if obj['type'] == 'Note':
-            base_object = Note()
+
+    if obj['type'] == 'Note':
+        base_object = Note()
+
+    
+    # The user may need to be notified if a message
+    # comes in and he's been to'd, bto'd, cc'd, or bcc'd
+    handle_mentions(activity, obj)
 
     #Assign common properties to the generic activity
     db.session.add(base_activity)
     db.session.flush()
     base_activity.external_id = activity['id']
     base_activity.external_actor_id = activity['actor']
-    base_activity.published = parse(activity['published'])
+    base_activity.published = parse_date(activity['published'])
     base_activity.add_all_recipients(activity)
-    if obj is not None:
-        base_activity.external_object_id = obj['id']
+    base_activity.external_object_id = obj['id']
 
 
     #assign common properties to the generic object
@@ -147,13 +206,15 @@ def new_ob_object(activity, obj, recipient=None):
         db.session.add(base_object)
         db.session.flush()
         base_object.external_id = obj['id']
-        base_object.published = parse(obj['published'])
+        base_object.published = parse_date(obj['published'])
         base_object.attribute_to(obj['attributedTo'])
         base_object.add_all_recipients(obj)
         if 'content' in obj:
             base_object.content = obj['content']
+        base_activity.object = base_object
 
     db.session.commit()
+
     return make_response('', 200)
 
 
@@ -215,7 +276,7 @@ def get_inbox_paginated(actor, page, personalized):
     for leader in leaders:
         followers_urls.append(leader.followers_collection)
 
-    recipient_objects = db.session.query(APObjectRecipient).filter(APObjectRecipient.recipient.in_(followers_urls)).paginate(page, 20).items
+    recipient_objects = db.session.query(APObjectRecipient).filter(APObjectRecipient.recipient.in_(followers_urls)).order_by(db.desc(APObjectRecipient.id)).paginate(page, 20).items
 
     ordered_items = []
 
@@ -239,7 +300,7 @@ def get_inbox_paginated(actor, page, personalized):
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
         'id': f'{root_url}/{page}',
-        'partOf': f'{root_url}/inbox',
+        'partOf': f'{root_url}',
         'type': 'OrderedCollectionPage',
         'prev': f'{root_url}/{page-1}',
         'next': f'{root_url}/{page+1}',
@@ -268,7 +329,11 @@ def get_actor_inbox(actor_name, user=None):
         #TODO: Non-watseful way of figuring out which notes go to who
         return error('You can only view your own inbox, not someone else\'s!')
 
-    
+'''
+    =-=-=-=-=-=-=-=-=-=-=-=-
+            ROUTES
+    =-=-=-=-=-=-=-=-=-=-=-=-
+'''
 
 @require_signature
 @app.route('/api/v1/actors/<actor_name>/inbox', methods=['GET', 'POST'])

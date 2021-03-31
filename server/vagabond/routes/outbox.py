@@ -10,7 +10,7 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy
+from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy, Like
 from vagabond.routes import error, require_signin
 from vagabond.config import config
 from vagabond.crypto import require_signature, signed_request
@@ -35,10 +35,11 @@ def deliver(actor, message):
         all_inboxes.append(inbox[0])
 
     for inbox in all_inboxes:
-        try:
-            signed_request(actor, message, url=inbox)
-        except:
-            app.logger.error(f'Could not deliver message to the following inbox: {inbox}')
+        if inbox.replace(config['api_url'], '') == inbox: #Don't deliver messages to ourselves!
+            try:
+                signed_request(actor, message, url=inbox)
+            except:
+                app.logger.error(f'Could not deliver message to the following inbox: {inbox}')
 
 
 # TODO: Cerberus validation
@@ -57,12 +58,11 @@ def post_outbox_c2s(actor_name, user=None):
     if not is_own_outbox:
         return error('You can\'t post to the outbox of an actor that isn\'t yours.')
 
-
-
-
     inbound_object = request.get_json()
 
-
+    is_local = False # Whether or not the object being acted upon is an object that **originated** on this server
+    if 'object' in inbound_object and inbound_object['object'].replace(config['api_url'], '') != inbound_object['object']:
+        is_local = True
 
     # Create activity and possibly the object, set polymorphic type, and flush to DB
     base_activity = None # base_activity always exists
@@ -78,15 +78,16 @@ def post_outbox_c2s(actor_name, user=None):
     elif inbound_object['type'] == 'Follow':
         base_activity = Follow()
         db.session.add(base_activity)
+    elif inbound_object['type'] == 'Like':
+        base_activity = Like()
+        db.session.add(base_activity)
     else:
         return error('Vagabond does not currently support this type of AcvtivityPub object. :(')
 
     db.session.flush()
 
-
     # Set actor ---> activity relationship
     base_activity.set_actor(actor)
-
 
     # Set activity ----> object relationship
     if base_object is None:
@@ -109,10 +110,31 @@ def post_outbox_c2s(actor_name, user=None):
         if existing_follow is not None and existing_follow.approved is True:
                 return error('You are already following this actor.')
 
-        new_follow = Following(actor.id, leader['id'], leader['followers'])
+        new_follow = Following(actor.id, leader['id'], leader['followers'], approved=is_local)
         db.session.add(new_follow)
-        signed_request(actor, base_activity.to_dict(), leader['inbox'])
 
+        # Due to the correspondance nature of the Follow activity, it has some very unusual requirements.
+        # We need to detect if the incoming Follow activity is targeting a local user. If it is, we don't need
+        # To deliver server-to-server messages about this transaction. Attempting to do so would cause problems
+        # resulting from uncomitted database transactions and be a waste of resources.
+        if is_local:
+            local_leader = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(inbound_object['object'].replace(f'{config["api_url"]}/actors/', ''))).first()
+            if local_leader is None:
+                return make_response('Actor not found', 404)
+            actor_dict = actor.to_dict()
+            new_followed_by = FollowedBy(local_leader.id, actor_dict['id'], actor_dict['inbox'], follower_shared_inbox=actor_dict['endpoints']['sharedInbox'], approved=True)
+            db.session.add(new_followed_by)
+        else:
+            signed_request(actor, base_activity.to_dict(), leader['inbox'])
+
+    elif inbound_object['type'] == 'Like':
+        in_obj = resolve_ap_object(inbound_object['object'])
+
+        if in_obj['type'] == 'Create' or in_obj['type'] == 'Note':
+            base_activity.set_object(inbound_object['object'])
+        else:
+            return error('object has to be a valid type.')
+        
     deliver(actor, base_activity.to_dict())
 
     db.session.commit()

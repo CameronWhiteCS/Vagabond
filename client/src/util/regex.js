@@ -1,6 +1,6 @@
-const username = /^[a-z0-9_-]{1,32}$/g;
+const username = /^[a-zA-Z0-9_-]{1,32}$/g;
 
-const actor = /^[a-z0-9_-]{1,32}$/g;
+const actor = /^[a-zA-Z0-9_-]{1,32}$/g;
 
 const password = /^.{12,255}/g;
 

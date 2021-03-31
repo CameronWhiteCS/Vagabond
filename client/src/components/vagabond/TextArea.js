@@ -1,5 +1,5 @@
 import React from 'react';
-import '../../css/App.css';
+import 'css/App.css';
 
 const TextArea = (props) => {
 

@@ -1,17 +1,19 @@
 
-import Routes from './components/navigation/Routes.js';
-import Navigation from './components/navigation/Navigation.js';
+import Routes from 'components/navigation/Routes.js';
+import Navigation from 'components/navigation/Navigation.js';
 import { BrowserRouter as Router } from 'react-router-dom';
-import NotificationModal from './components/NotificationModal.js';
-import './css/App.css';
-import { store } from './reducer/reducer.js';
+import NotificationModal from 'components/NotificationModal.js';
+import 'css/App.css';
+import { store } from 'reducer/reducer.js';
 import { useEffect } from 'react';
-import { useState } from 'react';
 import axios from 'axios';
 
 import LeftBar from './LeftBar.js';
 import RightBar from './RightBar.js';
 import SignIn from './components/session/SignIn.js';
+import Loading from 'components/Loading.js';
+import ComposeModal from 'components/notes/ComposeModal.js';
+
 
 const App = () => {
 
@@ -23,16 +25,12 @@ const App = () => {
       .catch((err) => { });
   }, []);
 
-
-  const barStyle = {
-
-  }
-
-
   return (
     <>
+      <Loading/>
       <NotificationModal />
       <SignIn />
+      <ComposeModal />
       <Router>
           <Navigation />
           <div id="container-root">

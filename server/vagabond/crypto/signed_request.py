@@ -108,6 +108,7 @@ def signed_request(actor, body, url=None, host=None, request_target=None, method
     response = requests.post(url=url, headers=headers, data=body)
 
     if response.status_code >= 400:
+        print(response.text)
         raise Exception('Signed request error')
 
     return response

@@ -3,7 +3,7 @@ from math import ceil
 from flask import make_response, request
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, User, Following
+from vagabond.models import Actor, User, Following, FollowedBy
 from vagabond.routes import require_signin
 from vagabond.crypto import require_signature
 from vagabond.routes import error
@@ -22,6 +22,7 @@ def route_get_actor_by_username(username):
     response.headers['Content-Type'] = 'application/activity+json'
     return response
 
+
 @app.route('/api/v1/newactor')
 @require_signin
 def route_add_new_actor(user):
@@ -39,6 +40,7 @@ def route_add_new_actor(user):
 
     return make_response('', 201)
 
+
 @app.route('/api/v1/switchactor')
 @require_signin
 def route_switch_actor(user):
@@ -55,6 +57,7 @@ def route_switch_actor(user):
         
     else:
         return error('User does not own actor.', 404) 
+    
     
 @app.route('/api/v1/actors/<username>/following')
 def route_get_actor_following(username):
@@ -99,7 +102,54 @@ def route_get_actor_following_page(username, page):
         'id': f'{config["api_url"]}/actors/{actor.username}/following/{page}',
         'type': 'OrderedCollectionPage',
         'totalItems': len(items),
-        'partOf': f'{config["api_url"]}/actors/{actor.username}/following/',
+        'partOf': f'{config["api_url"]}/actors/{actor.username}/following',
         'orderedItems': ordered_items
     }, 200)
 
+
+@app.route('/api/v1/actors/<username>/followers')
+def route_get_actor_followers(username):
+    '''
+       Publicly accessible followers collection. 
+    '''
+
+    actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(username)).first()
+    if actor is None:
+        return error('Actor not found', 404)
+
+    items_per_page = 20
+    total_items = db.session.query(FollowedBy).filter(FollowedBy.leader_id == actor.id).count()
+    last_page = ceil(total_items / items_per_page)
+
+    return make_response({
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        'id': f'{config["api_url"]}/actors/{actor.username}/followers',
+        'type': 'OrderedCollection',
+        'totalItems': total_items,
+        'first': f'{config["api_url"]}/actors/{actor.username}/followers/1',
+        'last': f'{config["api_url"]}/actors/{actor.username}/followers/{last_page}'
+    }, 200)
+
+
+@app.route('/api/v1/actors/<username>/followers/<int:page>')
+def route_get_actor_followers_page(username, page):
+    actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(username)).first()
+    if actor is None:
+        return error('Actor not found', 404)
+
+    items = db.session.query(FollowedBy).filter(db.and_(FollowedBy.leader_id == actor.id)).paginate(page, 20).items
+
+
+    ordered_items = []
+
+    for item in items:
+        ordered_items.append(item.follower)
+
+    return make_response({
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        'id': f'{config["api_url"]}/actors/{actor.username}/following/{page}',
+        'type': 'OrderedCollectionPage',
+        'totalItems': len(items),
+        'partOf': f'{config["api_url"]}/actors/{actor.username}/following',
+        'orderedItems': ordered_items
+    }, 200)

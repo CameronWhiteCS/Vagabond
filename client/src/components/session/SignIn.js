@@ -1,19 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { useFormik } from 'formik';
 import { Button, Form, Modal } from 'react-bootstrap';
+import { useFormik } from 'formik';
 import * as Yup from 'yup';
-import { store, handleError, initialState, updateSignIn, updateSignUp } from '../../reducer/reducer.js';
 import axios from 'axios';
 import { useHistory } from 'react-router-dom';
-import '../../css/App.css'
-import SignUp from './SignUp.js'
+import { store, handleError, initialState, updateSignIn, updateSignUp, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
+import 'css/App.css'
+import SignUp from 'components/session/SignUp.js'
 
 const SignIn = () => {
-    const [session, setSession] = useState(initialState.session);
-    const [show, setShow] = useState(initialState.showSignIn);
-    const [signUp, setSignUp] = useState(initialState.showSignUp)
 
-    const history = useHistory();
+    const [show, setShow] = useState(initialState.showSignIn);
+    const [signUp, setSignUp] = useState(initialState.showSignUp);
 
     // Closes the popup, including sign in and sing up, resets to sign in
 
@@ -24,7 +22,6 @@ const SignIn = () => {
 
     useEffect(() => {
         store.subscribe(() => {
-            setSession(store.getState().session);
             setShow(store.getState().showSignIn);
             setSignUp(store.getState().showSignUp);
         })
@@ -36,13 +33,16 @@ const SignIn = () => {
     }
 
     const onSubmit = (values) => {
+        const loadingReason = 'Signing in';
+        store.dispatch(addLoadingReason(loadingReason))
         axios.post('/api/v1/signin', formik.values)
             .then((res) => {
                 store.dispatch({ type: 'SET_SESSION', session: { ...store.getState().session, ...res.data } });
                 store.dispatch(updateSignIn(false));
-            }).catch(handleError);
-
-
+            }).catch(handleError)
+            .finally(() => {
+                store.dispatch(removeLoadingReason(loadingReason))
+            });
     }
 
     const validationSchema = Yup.object().shape({

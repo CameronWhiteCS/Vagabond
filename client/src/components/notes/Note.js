@@ -1,9 +1,11 @@
 import React from 'react';
-import { ReactComponent as Heart } from '../../icon/heart.svg';
-import { ReactComponent as ThumbsDown } from '../../icon/thumbs-down.svg';
-import { ReactComponent as MessageSquare } from '../../icon/message-square.svg';
-import { ReactComponent as ArrowUpRight } from '../../icon/arrow-up-right.svg';
-import { ReactComponent as MoreVertical } from '../../icon/more-vertical.svg';
+import { ReactComponent as Heart } from 'icon/heart.svg';
+import { ReactComponent as ThumbsDown } from 'icon/thumbs-down.svg';
+import { ReactComponent as MessageSquare } from 'icon/message-square.svg';
+import { ReactComponent as ArrowUpRight } from 'icon/arrow-up-right.svg';
+import { ReactComponent as MoreVertical } from 'icon/more-vertical.svg';
+
+import sanitizeHtml from 'sanitize-html';
 
 const Note = (props) => {
 
@@ -13,6 +15,7 @@ const Note = (props) => {
 
     const handleLike = () => {
         console.log("Liked");
+        console.log(props.activity.attributedTo);
         // Like or remove like
     }
 
@@ -49,29 +52,30 @@ const Note = (props) => {
         // Open profile who made the note
     }
 
-    // {props.note.handle}
-    // {props.note.published}
-
-    // {props.note.content}
-
-
+    const processUsername = (url) => {
+        let length = url.length;
+        if(url.charAt(length - 1) === '/') { url = url.substring(0, length - 1); }  
+        const parts = url.split('/');      
+        return parts[parts.length - 1]
+    }
 
     return (
         <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
         <div className="pfp-container">
-            <img onClick={openProfile} src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
-                 width="100%"
-                 height="auto"
-                 style={{borderRadius:'50%'}}
+            <img onClick={openProfile}
+                src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
+                width="100%"
+                height="auto"
+                style={{borderRadius:'50%'}}
+                alt="PFP"
             />
         </div>
         <div className="content">
             <div className="user-and-time">
-                <div className="handle" onClick={openProfile}>Username</div>
-                <div className="time">3h</div>
+                <div className="handle" onClick={openProfile}>{processUsername(props.activity.actor)}</div>
+                <div className="time">{new Date(props.activity.published).toUTCString()}</div>
             </div>
-            <div className="info">
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus et ex ultricies, mattis neque sit amet, tincidunt eros. Fusce et metus at lectus lobortis posuere pharetra ut justo. 
+            <div className="info" dangerouslySetInnerHTML={{__html: sanitizeHtml(props.activity.object.content)}}>
             </div>
             <div className="icon-bar-horizontal" style={{justifyContent:'space-between'}}>
                 <div style={style}>
