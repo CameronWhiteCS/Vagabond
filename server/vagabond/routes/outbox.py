@@ -10,10 +10,10 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy, Like
+from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy, Like, Notification
 from vagabond.routes import error, require_signin
 from vagabond.config import config
-from vagabond.crypto import require_signature, signed_request
+from vagabond.crypto import signed_request
 from vagabond.util import resolve_ap_object
 
 import json
@@ -73,8 +73,6 @@ def post_outbox_c2s(actor_name, user=None):
         base_activity = Create()
         db.session.add(base_object)
         db.session.add(base_activity)
-        base_activity.add_all_recipients(inbound_object)
-        base_object.add_all_recipients(inbound_object)
     elif inbound_object['type'] == 'Follow':
         base_activity = Follow()
         db.session.add(base_activity)
@@ -97,6 +95,8 @@ def post_outbox_c2s(actor_name, user=None):
 
     # Handle requirements for specific object types
     if inbound_object['type'] == 'Note':
+        base_activity.add_all_recipients(inbound_object)
+        base_object.add_all_recipients(inbound_object)
         base_object.attribute_to(actor)
         base_object.content = inbound_object['content']
     elif inbound_object['type'] == 'Follow':
@@ -123,9 +123,14 @@ def post_outbox_c2s(actor_name, user=None):
                 return make_response('Actor not found', 404)
             actor_dict = actor.to_dict()
             new_followed_by = FollowedBy(local_leader.id, actor_dict['id'], actor_dict['inbox'], follower_shared_inbox=actor_dict['endpoints']['sharedInbox'], approved=True)
+            db.session.add(Notification(local_leader, f'{actor_dict["preferredUsername"]} has followed you.', 'Follow'))
             db.session.add(new_followed_by)
         else:
-            signed_request(actor, base_activity.to_dict(), leader['inbox'])
+            db.session.commit() #This is required so when we get an Accept activity back before the end of this request, we're able to find the Follow activity
+            try:
+                signed_request(actor, base_activity.to_dict(), leader['inbox'])
+            except:
+                return error('Your follow request was not able to be delivered to that server.')
 
     elif inbound_object['type'] == 'Like':
         liked_object = resolve_ap_object(inbound_object['object'])
@@ -160,28 +165,43 @@ def route_user_outbox(actor_name):
 @app.route('/api/v1/actors/<actor_name>/outbox/<int:page>')
 def route_user_outbox_paginated(actor_name, page):
 
-    actor = db.session.query(Actor).filter_by(username=actor_name.lower()).first()
+    actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(actor_name)).first()
 
     if actor is None:
         return error('Actor not found', 404)
 
-    activities = db.session.query(Activity).filter(db.and_(
-        Activity.actor == actor, Activity.type != APObjectType.FOLLOW)).order_by(Activity.published.desc()).paginate(page, 20).items
+    base_query = db.session.query(Activity).filter(Activity.actor == actor)
+    
+    if 'maxId' in request.args:
+        base_query = base_query.filter(Activity.id <= int(request.args['maxId']))
+
+    base_query = base_query.order_by(Activity.published.desc()).paginate(page, 20)
+
+    activities = base_query.items
+
     api_url = config['api_url']
 
-    ordere_items = []
+    ordered_items = []
 
     for activity in activities:
-        ordere_items.append(activity.to_dict())
+        ordered_items.append(activity.to_dict())
+
+    prev = f'{api_url}/actors/{actor_name}/outbox/{page-1}'
+    _next =  f'{api_url}/actors/{actor_name}/outbox/{page+1}'
+
+    if 'maxId' in request.args:
+        max_id = int(request.args['maxId'])
+        prev = prev + f'?maxId={max_id}'
+        _next = _next + f'?maxId={max_id}'
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
         'id': f'{api_url}/actors/{actor_name}/outbox/{page}',
         'partOf': f'{api_url}/actors/{actor_name}/outbox',
         'type': 'OrderedCollectionPage',
-        'prev': f'{api_url}/actors/{actor_name}/outbox/{page-1}',
-        'next': f'{api_url}/actors/{actor_name}/outbox/{page+1}',
-        'orderedItems': ordere_items
+        'prev': prev,
+        'next': _next,
+        'orderedItems': ordered_items
     }
 
     response = make_response(output, 200)
@@ -198,6 +218,12 @@ def get_outbox(username):
 
     items_per_page = 20
     total_items = db.session.query(Activity).filter(Activity.actor == actor).count()
+
+    max_id_object = db.session.query(Activity).filter(Activity.actor == actor).order_by(Activity.id.desc()).first()
+    max_id = 0
+    if max_id_object is not None:
+        max_id = max_id_object.id
+
     max_page = ceil(total_items / items_per_page)
     api_url = config['api_url']
 
@@ -206,8 +232,8 @@ def get_outbox(username):
         'id': f'{api_url}/actors/{username}/outbox',
         'type': 'OrderedCollection',
         'totalItems': total_items,
-        'first': f'{api_url}/actors/{username}/outbox/1',
-        'last': f'{api_url}/actors/{username}/outbox/{max_page}'
+        'first': f'{api_url}/actors/{username}/outbox/1?maxId={max_id}',
+        'last': f'{api_url}/actors/{username}/outbox/{max_page}?maxId={max_id}'
     }
 
     response = make_response(output, 200)

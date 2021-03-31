@@ -49,13 +49,13 @@ const NotificationCenter = () => {
         .then((res) => {
             let newMentions = [];
             mentions.forEach((mention) => {
-                if (mention.id != notification.id) {
+                if (mention.id !== notification.id) {
                     newMentions.push(mention)
                 }
             });
             let newInteractions = [];
             interactions.forEach((interaction) => {
-                if (interaction.id != notification.id) {
+                if (interaction.id !== notification.id) {
                     newInteractions.push(interaction)
                 }
             });
@@ -167,7 +167,7 @@ const NotificationCenter = () => {
             <h1>Notifications</h1>
             <SelectView />
             <div style={{ width: '90%', margin: '0 auto 0 auto' }}>
-                {showInteractions && interactions.length == 0 && <p style={{color: 'white'}}>No interactions found.</p>}
+                {showInteractions && interactions.length === 0 && <p style={{color: 'white'}}>No interactions found.</p>}
                 {showInteractions && interactions.length > 0 && interactions.map(notification => <Interaction notification={notification} />)}
                 {!showInteractions && mentions.length === 0 && <p style={{color: 'white'}}>No mentions found.</p>}
                 {!showInteractions && mentions.map(notification => <Mention notification={notification} />)}

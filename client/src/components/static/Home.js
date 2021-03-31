@@ -1,6 +1,6 @@
 import React from "react"
 import ComposeNote from '../notes/ComposeNote.js';
-import Feed from 'components/Feed.js';
+import InboxViewer from 'components/InboxViewer.js.js';
 
 
 const Home = () => {
@@ -9,8 +9,7 @@ const Home = () => {
         <div id="homeBody">
             <h1>Post</h1>
             <ComposeNote></ComposeNote>
-            <h1>Inbox</h1>
-            <Feed type="inbox"/>
+            <InboxViewer/>
         </div>
       
     );
