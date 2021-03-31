@@ -6,7 +6,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification, Accept, Reject
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse as parse_date
@@ -45,15 +45,14 @@ def handle_inbound_accept_reject(actor, activity, obj):
     else:
         db.session.delete(following)
 
-    db.session.delete(follow_activity)
-    
-    db.session.commit()
-
-    return make_response('', 200)
+    return None
 
 
 def handle_inbound_follow(activity, obj):
-    #TODO: Privacy settings for person being followed
+    '''
+        Handles the side effects of an incoming Follow activity.
+        Returns: Flask response if an error occurs, None otherwise
+    '''
 
     api_url = config['api_url']
 
@@ -77,24 +76,23 @@ def handle_inbound_follow(activity, obj):
             follower_shared_inbox = follower['endpoints']['sharedInbox']
 
 
-    message_body = {
-        '@context': 'https://www.w3.org/ns/activitystreams',
-        'id': f'{api_url}/objects/acceptFollow', #ephemiral ID
-        'actor': f'{api_url}/actors/{leader.username}',
-        'type': 'Accept',
-        'object': activity
-    }
+    accept_activity = Accept()
+    accept_activity.set_actor(leader)
+    accept_activity.set_object(activity)
+
+    db.session.add(accept_activity)
+    db.session.flush()
+
+    message_body = accept_activity.to_dict()
+    message_body['object'] = activity
 
     try:
         signed_request(leader, message_body, url=follower_inbox)
     except:
         return error('An error occurred while processing that follow request.', 400)
 
-
-
     new_followed_by = FollowedBy(leader.id, follower['id'], follower_inbox, follower_shared_inbox)
     db.session.add(new_followed_by)
-
 
     follower_username = follower['id']
     if 'preferredUsername' in follower:
@@ -102,9 +100,7 @@ def handle_inbound_follow(activity, obj):
 
     db.session.add(Notification(leader, f'{follower_username} has followed you', 'Follow'))
 
-    db.session.commit()
-
-    return make_response('', 201)
+    return None
 
 
 def handle_mentions(activity, obj):
@@ -176,9 +172,18 @@ def new_ob_object(activity, obj, recipient=None):
     if activity['type'] == 'Create':
         base_activity = Create()
     elif (activity['type'] == 'Accept' or activity['type'] == 'Reject') and obj['type'] == 'Follow' and recipient is not None:
-        return handle_inbound_accept_reject(recipient, activity, obj)
+        if activity['type'] == 'Accept':
+            base_activity = Accept()
+        if activity['type'] == 'Reject':
+            base_activity = Reject()
+        err_response = handle_inbound_accept_reject(recipient, activity, obj)
+        if err_response is not None:
+            return err_response
     elif activity['type'] == 'Follow':
-        return handle_inbound_follow(activity, obj)
+        base_activity = Follow()
+        err_response = handle_inbound_follow(activity, obj)
+        if err_response is not None:
+            return err_response
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           
@@ -196,7 +201,8 @@ def new_ob_object(activity, obj, recipient=None):
     db.session.flush()
     base_activity.external_id = activity['id']
     base_activity.external_actor_id = activity['actor']
-    base_activity.published = parse_date(activity['published'])
+    if 'published' in activity:
+        base_activity.published = parse_date(activity['published'])
     base_activity.add_all_recipients(activity)
     base_activity.external_object_id = obj['id']
 
@@ -206,7 +212,8 @@ def new_ob_object(activity, obj, recipient=None):
         db.session.add(base_object)
         db.session.flush()
         base_object.external_id = obj['id']
-        base_object.published = parse_date(obj['published'])
+        if 'published' in obj:
+            base_object.published = parse_date(obj['published'])
         base_object.attribute_to(obj['attributedTo'])
         base_object.add_all_recipients(obj)
         if 'content' in obj:
@@ -245,6 +252,11 @@ def get_inbox(personalized, user=None):
         followers_urls.append(leader.followers_collection)
 
     total_items = db.session.query(APObjectRecipient.ap_object_id.distinct()).filter(APObjectRecipient.recipient.in_(followers_urls)).count()
+    max_id_object = db.session.query(APObjectRecipient.ap_object_id.distinct()).filter(APObjectRecipient.recipient.in_(followers_urls)).order_by(APObjectRecipient.ap_object_id.desc()).first()
+    print(max_id_object)
+    if max_id_object is not None:
+        max_id = max_id_object[0]
+
     items_per_page = 20
     max_page = ceil(total_items / items_per_page)
 
@@ -259,8 +271,8 @@ def get_inbox(personalized, user=None):
         'id': f'{root_url}',
         'type': 'OrderedCollection',
         'totalItems': total_items,
-        'first': f'{root_url}/1',
-        'last': f'{root_url}/{max_page}'
+        'first': f'{root_url}/1?maxId={max_id}',
+        'last': f'{root_url}/{max_page}?maxId={max_id}'
     }
 
     response = make_response(output)
@@ -276,7 +288,15 @@ def get_inbox_paginated(actor, page, personalized):
     for leader in leaders:
         followers_urls.append(leader.followers_collection)
 
-    recipient_objects = db.session.query(APObjectRecipient).filter(APObjectRecipient.recipient.in_(followers_urls)).order_by(db.desc(APObjectRecipient.id)).paginate(page, 20).items
+    base_query = db.session.query(APObjectRecipient).filter(APObjectRecipient.recipient.in_(followers_urls))
+
+
+    if 'maxId' in request.args:
+        base_query = base_query.filter(APObjectRecipient.ap_object_id <= int(request.args['maxId']))
+
+    base_query = base_query.order_by(db.desc(APObjectRecipient.id)).paginate(page, 20)
+
+    recipient_objects = base_query.items
 
     ordered_items = []
 
@@ -297,13 +317,21 @@ def get_inbox_paginated(actor, page, personalized):
     else:
         root_url = f'{api_url}/inbox'
 
+    prev = f'{root_url}/{page-1}'
+    _next = f'{root_url}/{page+1}'
+
+    if 'maxId' in request.args:
+        max_id = int(request.args['maxId'])
+        prev = prev + f'?maxId={max_id}'
+        _next = _next + f'?maxId={max_id}'
+
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
         'id': f'{root_url}/{page}',
         'partOf': f'{root_url}',
         'type': 'OrderedCollectionPage',
-        'prev': f'{root_url}/{page-1}',
-        'next': f'{root_url}/{page+1}',
+        'prev': prev,
+        'next': _next,
         'orderedItems': ordered_items
     }
 

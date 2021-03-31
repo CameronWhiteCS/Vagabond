@@ -4,12 +4,9 @@ import * as Yup from 'yup';
 import { username as usernameRegex, actor as actorRegex, password as passwordRegex } from 'util/regex.js';
 import axios from 'axios';
 import { handleError, store, updateSignIn, updateSignUp, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
-import { useHistory } from 'react-router-dom';
 import 'css/App.css'
 
 const SignUp = () => {
-
-    const history = useHistory();
 
     const initialValues = {
         username: '',

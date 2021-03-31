@@ -1,5 +1,5 @@
 
-import { ReactComponent as LogoHome } from 'icon/home.svg'
+//import { ReactComponent as LogoHome } from 'icon/home.svg'
 import { ReactComponent as Users } from 'icon/users.svg'
 import { ReactComponent as SignIn } from 'icon/sign-in.svg'
 import { ReactComponent as SignOut } from 'icon/sign-out.svg'

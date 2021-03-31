@@ -9,17 +9,16 @@ const initialState = {
     },
     showSignIn: false, // Whether or not the sign in modal is visible
     showSignUp: false,  // Whther or not the sign up modal is visible
-    inbox: { //used by Feed.js 
-        items: [],
-        nextPage: 1,
-        totalItems: undefined
-    },
-    outbox: {
-        items: [],
-        nextPage: 1,
-        totalItems: undefined
-    },
-    loadingReasons: [] //List of reasons why the application is currently loading and blocking user input
+    loadingReasons: [], //List of reasons why the application is currently loading and blocking user input
+    collections: {
+        //Used for OrderedCollectionViewer
+        //['https://example.io']: {
+        //    nextPage: 1,
+        //    totalItems: undefined,
+        //    items: [],
+        //    maxId: 1337
+        //}
+    }
 };
 
 const reducer = (state = initialState, action) => {
@@ -46,10 +45,6 @@ const reducer = (state = initialState, action) => {
     }
     else if (action.type === 'UPDATE_SIGNUP') {
         return { ...state, showSignUp: action.show }
-    } else if (action.type === 'SET_INBOX') {
-        return { ...state, inbox: action.inbox }
-    } else if (action.type === 'SET_OUTBOX') {
-        return { ...state, outbox: action.outbox }
     } else if (action.type === 'ADD_LOADING_REASON') {
         return { ...state, loadingReasons: [...state.loadingReasons, action.reason] }
     } else if (action.type === 'REMOVE_LOADING_REASON') {
@@ -60,8 +55,11 @@ const reducer = (state = initialState, action) => {
             }
         })
         return { ...state, loadingReasons: newLoadingReasons };
-    }
-    else {
+    } else if (action.type === 'SET_COLLECTION') {
+        const newCollections = { ...state.collections };
+        newCollections[action.id] = action.collection;
+        return { ...state, collections: newCollections };
+    } else {
         return state;
     }
 };
