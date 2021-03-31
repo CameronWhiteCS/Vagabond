@@ -29,7 +29,7 @@ body {
 }
 .search-bar button {
   height: 80%;
-  margin: auto 20px auto 20px;
+  margin: auto 10px auto 10px;
   background-color: rgba(0, 0, 0, 0);
   border-style: none;
   color: black;
@@ -49,13 +49,14 @@ body {
   height: 100%;
   width: 100%;
   vertical-align: middle;
+  border-style: none;
+}
+.input-part .form-control {
+  border-style: none;
 }
 .input-part input {
   background-color: rgba(0, 0, 0, 0);
   width: 95%;
-}
-.input-part input:focus {
-  outline: none;
 }
 
 .user-on-list {

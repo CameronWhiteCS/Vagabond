@@ -9,15 +9,17 @@ const LeftBar = (props) => {
     const [visible, setVisible] = useState(true)
     const [session, setSession] = useState(initialState.session)
 
+    const [following, setFollowing] = useState("...");
+    const [followers, setFollowers] = useState("...");
+
     const [actor, setActor] = useState(`loading...`)
-    const [following, setFollowing] = useState(`...`);
-    const [followers, setFollowers] = useState(`...`);
 
     useEffect(() => {
         store.subscribe(() => { 
             setActor(store.getState().session.currentActor.username); 
             setSession(store.getState().session)
         })
+        // Having the handle error throws an error even though it actually works.. ??
         //.catch(handleError);
         axios.get(`/api/v1/actors/${actor}/following`).then((res) => { setFollowing(res.data.totalItems) });
         axios.get(`/api/v1/actors/${actor}/followers`).then((res) => { setFollowers(res.data.totalItems) });
