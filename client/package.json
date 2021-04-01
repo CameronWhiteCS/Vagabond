@@ -1,5 +1,5 @@
 {
-  "proxy": "http://127.0.0.1:1234",
+  "proxy": "http://127.0.0.1:1236",
   "name": "vagabond-client",
   "version": "0.1.0",
   "private": true,

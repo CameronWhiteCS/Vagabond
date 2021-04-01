@@ -565,6 +565,7 @@ div.vagabond-navbar svg.icon {
   display: flex;
   height: 20px;
   align-items: baseline;
+  overflow-x: scroll;
 }
 .note .content .user-and-time .handle {
   font-weight: bold;
