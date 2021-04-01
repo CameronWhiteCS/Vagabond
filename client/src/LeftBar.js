@@ -1,10 +1,52 @@
-import { useState } from 'react';
-
+import React, { useState, useEffect } from 'react';
+import { store, handleError, initialState, removeLoadingReason, addLoadingReason } from './reducer/reducer.js';
+import axios from 'axios';
+import { Link } from 'react-router-dom';
 
 
 const LeftBar = (props) => {
 
     const [visible, setVisible] = useState(true)
+    const [session, setSession] = useState(store.getState().session)
+    const [following, setFollowing] = useState(0);
+    const [followers, setFollowers] = useState(0);
+
+    store.subscribe(() => {
+        const newState = store.getState();
+        setSession(newState.session);
+    });
+
+    useEffect(() => {
+        if(session.currentActor?.username !== undefined) {
+                const loadingReasonFollowing = 'Fetching following count';
+                store.dispatch(addLoadingReason(loadingReasonFollowing));
+
+                const loadingReasonFollowers = 'Fetching followers count';
+                store.dispatch(addLoadingReason(loadingReasonFollowers));
+
+
+
+                axios.get(`/api/v1/actors/${session.currentActor.username}/following`)
+                .then((res) => {
+                    setFollowing(res.data.totalItems);
+                })
+                .catch(handleError)
+                .finally(() => {
+                    store.dispatch(removeLoadingReason(loadingReasonFollowing))
+                })
+
+                axios.get(`/api/v1/actors/${session.currentActor.username}/followers`)
+                .then((res) => {
+                    setFollowers(res.data.totalItems);
+                })
+                .catch(handleError)
+                .finally(() => {
+                    store.dispatch(removeLoadingReason(loadingReasonFollowers))
+                })
+        
+        }
+    }, [session.currentActor?.username]);
+    
 
     const styleBarInvisible = {
         justifyContent: 'flex-start',
@@ -17,9 +59,8 @@ const LeftBar = (props) => {
         background: 'white'
     };
 
-    const toggleVisibility = () => {
-        setVisible(!visible);
-    }
+    const toggleVisibility = () => { setVisible(!visible); }
+
 
     return (
         <>
@@ -31,16 +72,16 @@ const LeftBar = (props) => {
                 </div>
                 {
                     visible &&
-                    <div id="leftBar" className="bar" style={{display:'flex',flexDirection:'column',justifyContent:'flex-start',alignItems:'center'}}>
-                        <div id="profile-pic" style={{backgroundImage:'url(\"https://www.treehugger.com/thmb/7g7LQAnUZcEWSThwdvIlFt2u2G0=/4560x2565/smart/filters:no_upscale()/duckling-close-up-500315849-572917c93df78ced1f0b99ec.jpg\")'}}></div>
-                        <h1 className="dark">lilDuckie_</h1>
-                        <div id="counts-parent" style={{display:'flex',justifyContent:'space-around',width:'80%',marginTop:'10px'}}>
-                            <div id="following-parent" style={{display:'flex',alignItems:'center',flexDirection:'column'}}>
-                                <h1 className="dark">123</h1>
+                    <div id="leftBar" className="bar" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}>
+                        <div id="profile-pic" style={{ backgroundImage: 'url(\"https://i.stack.imgur.com/l60Hf.png\")' }}></div>
+                        <h1 className="dark">{session.currentActor?.username}</h1>
+                        <div id="counts-parent" style={{ display: 'flex', justifyContent: 'space-around', width: '80%', marginTop: '10px' }}>
+                            <div id="following-parent" style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+                                <Link to="/following"><h1 className="dark">{following}</h1></Link>
                                 <div>Following</div>
                             </div>
-                            <div id="followers-parent" style={{display:'flex',alignItems:'center',flexDirection:'column'}}>
-                                <h1 className="dark">3443</h1>
+                            <div id="followers-parent" style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
+                                <Link to="/followers"><h1 className="dark">{followers}</h1></Link>
                                 <div>Followers</div>
                             </div>
                         </div>
@@ -49,6 +90,7 @@ const LeftBar = (props) => {
             </div>
         </>
     );
+
 }
 
 export default LeftBar;

@@ -59,7 +59,6 @@ const NotificationCenter = () => {
                     newInteractions.push(interaction)
                 }
             });
-
             setMentions(newMentions);
             setInteractions(newInteractions);
         })

@@ -15,6 +15,7 @@ const Note = (props) => {
 
     const handleLike = () => {
         console.log("Liked");
+        console.log(props.activity.attributedTo);
         // Like or remove like
     }
 
@@ -51,12 +52,12 @@ const Note = (props) => {
         // Open profile who made the note
     }
 
-    // {props.note.handle}
-    // {props.note.published}
-
-    // {props.note.content}
-
-
+    const processUsername = (url) => {
+        let length = url.length;
+        if(url.charAt(length - 1) === '/') { url = url.substring(0, length - 1); }  
+        const parts = url.split('/');      
+        return parts[parts.length - 1]
+    }
 
     return (
         <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
@@ -71,7 +72,7 @@ const Note = (props) => {
         </div>
         <div className="content">
             <div className="user-and-time">
-                <div className="handle" onClick={openProfile}>{props.activity.attributedTo}</div>
+                <div className="handle" onClick={openProfile}>{processUsername(props.activity.actor)}</div>
                 <div className="time">{new Date(props.activity.published).toUTCString()}</div>
             </div>
             <div className="info" dangerouslySetInnerHTML={{__html: sanitizeHtml(props.activity.object.content)}}>

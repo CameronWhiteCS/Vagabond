@@ -22,6 +22,9 @@ const OrderedCollectionViewer = (props) => {
      * @returns 
      */
     const stripUrl = (url) => {
+        if(!url) {
+            return url;
+        }
         let output = '';
         let splits = url.replace('https://', '').replace('http://', '').split('/')
         for(let i = 1; i < splits.length; i++){
@@ -52,7 +55,7 @@ const OrderedCollectionViewer = (props) => {
     const loadNextPage = () => {
         const loadingReason = `Fetching contents of ${props.id}`;
         store.dispatch(addLoadingReason(loadingReason));
-        axios.get(`${collection.nextPage}`)
+        axios.get(`${stripUrl(collection.nextPage)}`)
             .then((res) => {
                 const newCollection = {
                     ...collection,

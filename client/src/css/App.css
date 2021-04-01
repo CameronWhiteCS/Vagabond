@@ -1,5 +1,99 @@
+a {
+  text-decoration: none !important;
+}
+
 body {
   background-color: #454545;
+}
+
+.icon-bar-horizontal-searching {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-around;
+  color: #6c757d;
+}
+
+.bar-parent-searching {
+  height: 100%;
+  max-width: 35%;
+  width: 35%;
+}
+
+.search-bar {
+  display: flex;
+  flex-direction: row;
+  background-color: white;
+  height: 90%;
+  border-radius: 10px;
+  width: 100%;
+}
+.search-bar button {
+  height: 80%;
+  margin: auto 10px auto 10px;
+  background-color: rgba(0, 0, 0, 0);
+  border-style: none;
+  color: black;
+  font-weight: 450;
+}
+.search-bar #search-button {
+  background-color: #339CFE;
+  border-radius: 7px;
+  height: 75%;
+  color: white;
+}
+
+.input-part {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  height: 100%;
+  width: 100%;
+  vertical-align: middle;
+  border-style: none;
+}
+.input-part .form-control {
+  border-style: none;
+}
+.input-part input {
+  background-color: rgba(0, 0, 0, 0);
+  width: 95%;
+}
+
+.user-on-list {
+  background-color: white;
+  display: flex;
+  flex-direction: row;
+  min-height: 60px;
+  border-radius: 10px;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: lighter;
+  width: 92%;
+  margin: 10px auto 10px auto;
+}
+.user-on-list:hover {
+  cursor: pointer;
+}
+.user-on-list #user-url {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  overflow-wrap: break-word !important;
+  overflow-x: hidden;
+  margin-left: 10px;
+  font-size: 15px;
+  width: 70%;
+  text-overflow: clip;
+}
+.user-on-list button {
+  background-color: #339CFE;
+  color: white;
+  font-size: 15px;
+  font-weight: lighter;
+  border-style: none;
+  border-radius: 6px;
+  margin-right: 10px;
+  height: 40px;
 }
 
 .notification-option {
@@ -74,7 +168,7 @@ body {
   background-color: white;
   background-clip: padding-box;
   border-style: none;
-  border-radius: 30px;
+  border-radius: 10px;
   outline: 0;
   font-family: "Kumbh Sans", sans-serif;
 }
@@ -167,7 +261,6 @@ div.vagabond-navbar {
   color: white;
   background-color: #363636;
   height: 70px;
-  flex-wrap: wrap;
   justify-content: space-between;
 }
 div.vagabond-navbar a {
@@ -309,6 +402,18 @@ div.vagabond-navbar svg.icon {
   div.vagabond-navbar .icon-bar-horizontal {
     width: 100%;
     justify-content: space-around;
+    margin: 0;
+  }
+  div.vagabond-navbar .icon-bar-horizontal-searching {
+    display: none;
+  }
+  div.vagabond-navbar .bar-parent-searching {
+    height: 100%;
+    max-width: 100%;
+    min-width: 100%;
+  }
+  div.vagabond-navbar .search-bar {
+    width: 100%;
   }
   div.vagabond-navbar svg.icon {
     margin: 0;
@@ -320,6 +425,31 @@ div.vagabond-navbar svg.icon {
     border-radius: 0px;
   }
 }
+#compose-note-modal {
+  display: flex;
+  flex-wrap: overflow;
+  flex-direction: row;
+  margin: 0px;
+  justify-content: space-between;
+  width: 100%;
+}
+#compose-note-modal .compose-note {
+  display: flex;
+  background-color: white;
+  border-style: none;
+  border-width: 0;
+  border-radius: 12px;
+}
+#compose-note-modal .compose-note .textarea-container {
+  flex: 1;
+}
+#compose-note-modal .buttons {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
 #compose-note {
   display: flex;
   flex-wrap: overflow;
@@ -445,9 +575,14 @@ div.vagabond-navbar svg.icon {
   margin-left: 8px;
   color: #495057;
   font-size: 13px;
+  overflow-x: scroll;
 }
 .note .content .info {
-  margin: 10px 0px 10px 0px;
+  margin: 10px 0px 10px 0px !important;
+}
+.note .content .info p {
+  font-size: 15px !important;
+  font-weight: 300 !important;
 }
 .note .note-icon {
   width: 15px;
