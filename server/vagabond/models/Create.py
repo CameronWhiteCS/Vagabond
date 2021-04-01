@@ -1,5 +1,5 @@
 from vagabond.__main__ import db
-from vagabond.models import APObject, APObjectType, Activity
+from vagabond.models import APObjectType, Activity
 
 class Create(Activity):
     

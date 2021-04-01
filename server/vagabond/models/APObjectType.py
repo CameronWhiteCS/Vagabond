@@ -10,3 +10,5 @@ class APObjectType(enum.Enum):
     ACTIVITY = 'Activity'
     LIKE = 'Like'
     UNDO = 'Undo'
+    ACCEPT = 'Accept'
+    REJECT = 'Reject'

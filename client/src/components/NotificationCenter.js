@@ -9,7 +9,7 @@ import { ReactComponent as ThumbsDown } from 'icon/thumbs-down.svg';
 import { ReactComponent as MessageSquare } from 'icon/message-square.svg';
 import { ReactComponent as AtSign } from 'icon/at-sign.svg';
 
-import { handleError } from "reducer/reducer";
+import { store, handleError, addLoadingReason, removeLoadingReason } from "reducer/reducer";
 
 
 const NotificationCenter = () => {
@@ -19,6 +19,8 @@ const NotificationCenter = () => {
     const [showInteractions, setShowInteractions] = useState(true);
 
     useEffect(() => {
+        const loadingReason = 'Fetching notifications';
+        store.dispatch(addLoadingReason(loadingReason));
         axios.get('/api/v1/notifications')
             .then((res) => {
                 let interactions = [];
@@ -34,6 +36,9 @@ const NotificationCenter = () => {
                 setInteractions(interactions);
             })
             .catch(handleError)
+            .finally(() => {
+                store.dispatch(removeLoadingReason(loadingReason));
+            });
     }, []);
 
     const deleteNotification = (notification) => {
@@ -44,17 +49,16 @@ const NotificationCenter = () => {
         .then((res) => {
             let newMentions = [];
             mentions.forEach((mention) => {
-                if (mention.id != notification.id) {
+                if (mention.id !== notification.id) {
                     newMentions.push(mention)
                 }
             });
             let newInteractions = [];
             interactions.forEach((interaction) => {
-                if (interaction.id != notification.id) {
+                if (interaction.id !== notification.id) {
                     newInteractions.push(interaction)
                 }
             });
-
             setMentions(newMentions);
             setInteractions(newInteractions);
         })
@@ -162,7 +166,7 @@ const NotificationCenter = () => {
             <h1>Notifications</h1>
             <SelectView />
             <div style={{ width: '90%', margin: '0 auto 0 auto' }}>
-                {showInteractions && interactions.length == 0 && <p style={{color: 'white'}}>No interactions found.</p>}
+                {showInteractions && interactions.length === 0 && <p style={{color: 'white'}}>No interactions found.</p>}
                 {showInteractions && interactions.length > 0 && interactions.map(notification => <Interaction notification={notification} />)}
                 {!showInteractions && mentions.length === 0 && <p style={{color: 'white'}}>No mentions found.</p>}
                 {!showInteractions && mentions.map(notification => <Mention notification={notification} />)}

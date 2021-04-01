@@ -9,10 +9,15 @@ const initialState = {
     },
     showSignIn: false, // Whether or not the sign in modal is visible
     showSignUp: false,  // Whther or not the sign up modal is visible
-    inbox: { //used by Feed.js 
-        items: [],
-        nextPage: undefined,
-        totalItems: undefined
+    compose: false, // Modal for composing a note
+    collections: {
+        //Used for OrderedCollectionViewer
+        //['https://example.io']: {
+        //    nextPage: 1,
+        //    totalItems: undefined,
+        //    items: [],
+        //    maxId: 1337
+        //}
     },
     loadingReasons: [] //List of reasons why the application is currently loading and blocking user input
 };
@@ -26,23 +31,19 @@ const reducer = (state = initialState, action) => {
         });
         const newState = { ...state, notifications: newNotifications }
         return newState;
-    }
-    else if (action.type === 'HIDE_NOTIFICATION') {
+    } else if (action.type === 'HIDE_NOTIFICATION') {
         const newNotifications = [...state.notifications];
         newNotifications.shift();
         const newState = { ...state, notifications: newNotifications }
         return newState;
-    }
-    else if (action.type === 'SET_SESSION') {
+    } else if (action.type === 'SET_SESSION') {
         return { ...state, session: action.session }
-    }
-    else if (action.type === 'UPDATE_SIGNIN') {
+    } else if (action.type === 'UPDATE_SIGNIN') {
         return { ...state, showSignIn: action.show }
-    }
-    else if (action.type === 'UPDATE_SIGNUP') {
+    } else if (action.type === 'UPDATE_SIGNUP') {
         return { ...state, showSignUp: action.show }
-    } else if (action.type === 'SET_INBOX') {
-        return { ...state, inbox: action.inbox }
+    } else if (action.type === 'UPDATE_COMPOSE') {
+        return { ...state, compose: action.compose }
     } else if (action.type === 'ADD_LOADING_REASON') {
         return { ...state, loadingReasons: [...state.loadingReasons, action.reason] }
     } else if (action.type === 'REMOVE_LOADING_REASON') {
@@ -53,14 +54,31 @@ const reducer = (state = initialState, action) => {
             }
         })
         return { ...state, loadingReasons: newLoadingReasons };
-    }
-    else {
+    } else if (action.type === 'SET_COLLECTION') {
+        const newCollections = { ...state.collections };
+        newCollections[action.id] = action.collection;
+        return { ...state, collections: newCollections };
+    } else {
         return state;
     }
 };
 
 const store = createStore(reducer, initialState);
 store.getState();
+
+/**
+ * Used to update the visibility of the compose modal.
+ * @param {*} show Whether or not the compose modal is visible
+ * @returns void
+ */
+ const updateCompose = (compose) => {
+
+    return {
+        type: 'UPDATE_COMPOSE',
+        compose: compose
+    };
+};
+
 
 /**
  * Used to update the visibility of the sign in modal.
@@ -139,4 +157,4 @@ const removeLoadingReason = (reason) => {
     }
 }
 
-export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp, addLoadingReason, removeLoadingReason }
+export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp, addLoadingReason, updateCompose, removeLoadingReason }

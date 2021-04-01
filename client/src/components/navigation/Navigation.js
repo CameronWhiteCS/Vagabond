@@ -1,25 +1,25 @@
 
-import { ReactComponent as LogoHome } from 'icon/home.svg'
-import { ReactComponent as LogoUsers } from 'icon/users.svg'
+import { ReactComponent as Home } from 'icon/home.svg'
+import { ReactComponent as Users } from 'icon/users.svg'
 import { ReactComponent as SignIn } from 'icon/sign-in.svg'
 import { ReactComponent as SignOut } from 'icon/sign-out.svg'
 import { ReactComponent as Bell } from 'icon/bell.svg'
 import { ReactComponent as Inbox } from 'icon/inbox.svg';
 import { ReactComponent as Feather } from 'icon/feather.svg';
-
+import { ReactComponent as Send } from 'icon/send.svg';
+import { ReactComponent as UserPlus } from 'icon/user-plus.svg';
 import { ReactComponent as Logo } from 'img/Vagabond_Logo.svg';
-
-import { initialState, store, handleError, updateSignIn } from 'reducer/reducer.js';
+import { initialState, store, handleError, updateSignIn, updateCompose } from 'reducer/reducer.js';
 
 import { useState, useEffect } from 'react';
-
 import { Link, useHistory } from 'react-router-dom';
-
 import axios from 'axios';
+import SearchBar from './SearchBar.js'
 
 const Navigation = () => {
 
     const [session, setSession] = useState(initialState.session);
+    const [searching, setSearching] = useState(false);
 
     const history = useHistory();
 
@@ -42,56 +42,83 @@ const Navigation = () => {
         store.dispatch(updateSignIn(true));
     }
 
+    const openCompose = () => {
+        store.dispatch(updateCompose(true));
+    }
+
+    function toggleSearchBar() {
+        console.log("Toggled")
+        if(searching) setSearching(false);
+        else setSearching(true);
+        console.log(searching)
+    }
+
     return (
+
         <div className="vagabond-navbar" style={{padding: '10px'}}>
-            <span className="logoAndTitle">
+            <span className="logoAndTitle" style={{width:'25%'}}>
                 <Logo style={{width:'35px', height:'35px', fill:'white', margin:'auto 10px auto 0'}}/>
                 <div id="vagabondTitle">Vagabond</div>
             </span>
-            
-            <span className="icon-bar-horizontal" style={{marginRight:'25px'}}>
-                <Link to="/" title="Home">
-                    <LogoHome className="icon"/>
-                </Link>
-                
+            <div className={searching ? "bar-parent-searching" : ""}>
                 {
                     session.signedIn &&
-                    <Link to="/actors" title="All actors">
-                        <LogoUsers className="icon"/>
+                    searching &&
+                    <div className="search-bar">
+                        <button onClick={toggleSearchBar}>X</button>
+                        <SearchBar/>
+                    </div>
+                }
+            </div>
+            <span className={searching ? "icon-bar-horizontal-searching" : "icon-bar-horizontal"}>
+                {
+                    session.signedIn &&
+                    !searching &&
+                    <Link>
+                        <UserPlus onClick={toggleSearchBar} className="icon"/>
                     </Link>
                 }
-
+                <Link to="/"  title="Home">
+                    <Home className="icon"/>
+                </Link>
+                {
+                    session.signedIn &&
+                    <Link to="/outbox" title="Outbox">
+                        <Send className="icon" />
+                    </Link>
+                }
                 {
                     session.signedIn && 
-                    <Link to="/compose" title="Compose Note">
+                    <Link onClick={openCompose}  to="#" title="Compose Note">
                         <Feather className="icon" />
                     </Link>
                 }
+                {
+                    session.signedIn &&
+                    <Link to="/notifications" title="Notifications">
+                        <Bell className="icon" />
+                    </Link>
+                }
+                {
+                    session.signedIn &&
+                    <Link to="/actors" title="My actors">
+                        <Users className="icon" />
+                    </Link>
+                }
+                {
 
-                {
-                    session.signedIn && 
-                    <Link to="/notifications" title="Bell">
-                        <Bell className="icon"/>
-                    </Link>
-                }
-                {
-                    session.signedIn && 
-                    <Link to="/inbox" title="Inbox">
-                        <Inbox className="icon"/>
-                    </Link>
-                }
-                {
                     !session.signedIn &&
-                    <SignIn className="icon" onClick={openSignIn}/>
+                    <SignIn className="icon" onClick={openSignIn} />
                 }
                 {
                     session.signedIn &&
                     <Link onClick={signOut} to="#" title="Sign out">
-                        <SignOut className="icon"/>
+                        <SignOut className="icon" />
                     </Link>
                 }
+
             </span>
-            </div>
+        </div>
     );
 
 }
