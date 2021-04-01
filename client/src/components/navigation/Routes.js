@@ -10,8 +10,12 @@ import ComposeNote from 'components/notes/ComposeNote.js';
 import InboxViewer from 'components/InboxViewer.js.js';
 import Follow from 'components/Follow.js';
 import OutboxViewer from 'components/OutboxViewer.js';
+import SearchResults from 'components/static/SearchResults.js';
+import Following from 'components/Following.js';
+import Followers from 'components/Followers.js';
 
 import { store } from 'reducer/reducer.js';
+
 
 const Routes = () => {
 
@@ -23,21 +27,19 @@ const Routes = () => {
         });
     }, []);
 
-    const Test = () => {
-        return <p>Test</p>
-    }
-
     return (
         <Switch>
             <Route exact path="/" render={() => <Home />} />
-            <Route exact path="/test" render={() => <Test />} />
             <Route exact path="/about" render={() => <About />} />
             <Route exact path="/actors" render={() => <ViewActors actors={actors} />} />
             <Route exact path="/compose" render={() => <ComposeNote />} />
             <Route exact path="/inbox" render={() => <InboxViewer/>} />
             <Route exact path="/follow" render={() => <Follow />} />
+            <Route exact path="/search" render={() => <SearchResults />} />
             <Route exact path="/notifications" render={() => <NotificationCenter />} />
             <Route exact path="/outbox" render={() => <OutboxViewer/>} />
+            <Route exact path="/following" render={() => <Following />} />
+            <Route exact path="/followers" render={() => <Followers />} />
             <Route render={() => <Error404 />} />
         </Switch>
     );

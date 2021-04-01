@@ -12,6 +12,8 @@ import LeftBar from './LeftBar.js';
 import RightBar from './RightBar.js';
 import SignIn from './components/session/SignIn.js';
 import Loading from 'components/Loading.js';
+import ComposeModal from 'components/notes/ComposeModal.js';
+
 
 const App = () => {
 
@@ -28,6 +30,7 @@ const App = () => {
       <Loading/>
       <NotificationModal />
       <SignIn />
+      <ComposeModal />
       <Router>
           <Navigation />
           <div id="container-root">

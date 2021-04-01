@@ -3,7 +3,7 @@ import { Button, Form, Modal } from 'react-bootstrap';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
-
+import { useHistory } from 'react-router-dom';
 import { store, handleError, initialState, updateSignIn, updateSignUp, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
 import 'css/App.css'
 import SignUp from 'components/session/SignUp.js'

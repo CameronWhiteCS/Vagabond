@@ -5,22 +5,23 @@ import { ReactComponent as SignIn } from 'icon/sign-in.svg'
 import { ReactComponent as SignOut } from 'icon/sign-out.svg'
 import { ReactComponent as Bell } from 'icon/bell.svg'
 import { ReactComponent as Inbox } from 'icon/inbox.svg';
+import { ReactComponent as Search } from 'icon/search.svg';
 import { ReactComponent as Feather } from 'icon/feather.svg';
 import { ReactComponent as Send } from 'icon/send.svg';
-
+import { ReactComponent as UserPlus } from 'icon/user-plus.svg';
 import { ReactComponent as Logo } from 'img/Vagabond_Logo.svg';
-
-import { initialState, store, handleError, updateSignIn } from 'reducer/reducer.js';
+import { initialState, store, handleError, updateSignIn, updateCompose } from 'reducer/reducer.js';
 
 import { useState, useEffect } from 'react';
-
 import { Link, useHistory } from 'react-router-dom';
-
 import axios from 'axios';
+import SearchBar from './SearchBar.js'
 
 const Navigation = () => {
 
     const [session, setSession] = useState(initialState.session);
+
+    const [searching, setSearching] = useState(false);
 
     const history = useHistory();
 
@@ -41,6 +42,17 @@ const Navigation = () => {
 
     const openSignIn = () => {
         store.dispatch(updateSignIn(true));
+    }
+
+    const openCompose = () => {
+        store.dispatch(updateCompose(true));
+    }
+
+    function toggleSearchBar() {
+        console.log("Toggled")
+        if(searching) setSearching(false);
+        else setSearching(true);
+        console.log(searching)
     }
 
     return (
