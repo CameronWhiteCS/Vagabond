@@ -45,8 +45,6 @@ def handle_inbound_accept_reject(actor, activity, obj):
     else:
         db.session.delete(following)
 
-    db.session.delete(follow_activity)
-    
     db.session.commit()
 
     return make_response('', 200)
@@ -179,6 +177,8 @@ def new_ob_object(activity, obj, recipient=None):
         return handle_inbound_accept_reject(recipient, activity, obj)
     elif activity['type'] == 'Follow':
         return handle_inbound_follow(activity, obj)
+    elif activity['type'] == 'Undo':
+        return error('Undo Request not supported yet')
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           

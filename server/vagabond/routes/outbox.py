@@ -10,7 +10,7 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy, Like
+from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy, Like, Undo
 from vagabond.routes import error, require_signin
 from vagabond.config import config
 from vagabond.crypto import require_signature, signed_request
@@ -81,6 +81,10 @@ def post_outbox_c2s(actor_name, user=None):
     elif inbound_object['type'] == 'Like':
         base_activity = Like()
         db.session.add(base_activity)
+    #Undoes follow, like, and  block
+    elif inbound_object['type'] == 'Undo':
+        base_activity = Undo()
+        
     else:
         return error('Vagabond does not currently support this type of AcvtivityPub object. :(')
 
@@ -134,7 +138,15 @@ def post_outbox_c2s(actor_name, user=None):
             base_activity.set_object(inbound_object['object'])
         else:
             return error('object has to be a valid type.')
+    elif inbound_object['type'] == 'Undo':
+        #if base_activity.actor != resolve_ap_object(inbound_object['object'])['actor']
+        return make_response('The actor who made the activity must be the one to undo it', 404)
         
+        #else
+            #first see if it will even let me undo the object
+            #delete the activity made, follow needs to be stored in the AP_object like create is
+        
+            
     deliver(actor, base_activity.to_dict())
 
     db.session.commit()

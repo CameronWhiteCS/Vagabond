@@ -9,3 +9,4 @@ class APObjectType(enum.Enum):
     FOLLOW = 'Follow'
     ACTIVITY = 'Activity'
     LIKE = 'Like'
+    UNDO = 'Undo'

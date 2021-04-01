@@ -2,3 +2,4 @@
 *.eslintcache
 server/vagabond/static/*
 .vscode/*
+server/wsgi.py
