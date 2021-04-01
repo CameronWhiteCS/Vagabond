@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { store, handleError, initialState, removeLoadingReason, addLoadingReason } from './reducer/reducer.js';
+import { store, handleError, removeLoadingReason, addLoadingReason } from 'reducer/reducer.js';
+
 import axios from 'axios';
 import { Link } from 'react-router-dom';
 
@@ -60,7 +61,6 @@ const LeftBar = (props) => {
     };
 
     const toggleVisibility = () => { setVisible(!visible); }
-
 
     return (
         <>

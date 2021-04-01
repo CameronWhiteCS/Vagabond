@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 
 import { store } from 'reducer/reducer.js';
 import OrderedCollectionViewer from './OrderedCollectionViewer';
 
-
-
-
 const Following = () => {
+
 
     const [session, setSession] = useState(store.getState().session);
 

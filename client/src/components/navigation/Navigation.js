@@ -1,11 +1,10 @@
 
-//import { ReactComponent as LogoHome } from 'icon/home.svg'
+import { ReactComponent as Home } from 'icon/home.svg'
 import { ReactComponent as Users } from 'icon/users.svg'
 import { ReactComponent as SignIn } from 'icon/sign-in.svg'
 import { ReactComponent as SignOut } from 'icon/sign-out.svg'
 import { ReactComponent as Bell } from 'icon/bell.svg'
 import { ReactComponent as Inbox } from 'icon/inbox.svg';
-import { ReactComponent as Search } from 'icon/search.svg';
 import { ReactComponent as Feather } from 'icon/feather.svg';
 import { ReactComponent as Send } from 'icon/send.svg';
 import { ReactComponent as UserPlus } from 'icon/user-plus.svg';
@@ -20,7 +19,6 @@ import SearchBar from './SearchBar.js'
 const Navigation = () => {
 
     const [session, setSession] = useState(initialState.session);
-
     const [searching, setSearching] = useState(false);
 
     const history = useHistory();
@@ -56,15 +54,32 @@ const Navigation = () => {
     }
 
     return (
-        <div className="vagabond-navbar" style={{ padding: '10px' }}>
-            <span className="logoAndTitle">
-                <Logo style={{ width: '35px', height: '35px', fill: 'white', margin: 'auto 10px auto 0' }} />
+
+        <div className="vagabond-navbar" style={{padding: '10px'}}>
+            <span className="logoAndTitle" style={{width:'25%'}}>
+                <Logo style={{width:'35px', height:'35px', fill:'white', margin:'auto 10px auto 0'}}/>
                 <div id="vagabondTitle">Vagabond</div>
             </span>
-
-            <span className="icon-bar-horizontal" style={{ marginRight: '25px' }}>
-                <Link to="/" title="Inbox">
-                    <Inbox className="icon" />
+            <div className={searching ? "bar-parent-searching" : ""}>
+                {
+                    session.signedIn &&
+                    searching &&
+                    <div className="search-bar">
+                        <button onClick={toggleSearchBar}>X</button>
+                        <SearchBar/>
+                    </div>
+                }
+            </div>
+            <span className={searching ? "icon-bar-horizontal-searching" : "icon-bar-horizontal"}>
+                {
+                    session.signedIn &&
+                    !searching &&
+                    <Link>
+                        <UserPlus onClick={toggleSearchBar} className="icon"/>
+                    </Link>
+                }
+                <Link to="/"  title="Home">
+                    <Home className="icon"/>
                 </Link>
                 {
                     session.signedIn &&
@@ -73,8 +88,8 @@ const Navigation = () => {
                     </Link>
                 }
                 {
-                    session.signedIn &&
-                    <Link to="/compose" title="Compose note">
+                    session.signedIn && 
+                    <Link onClick={openCompose}  to="#" title="Compose Note">
                         <Feather className="icon" />
                     </Link>
                 }
@@ -91,6 +106,7 @@ const Navigation = () => {
                     </Link>
                 }
                 {
+
                     !session.signedIn &&
                     <SignIn className="icon" onClick={openSignIn} />
                 }

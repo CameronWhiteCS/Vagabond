@@ -10,7 +10,6 @@ const initialState = {
     showSignIn: false, // Whether or not the sign in modal is visible
     showSignUp: false,  // Whther or not the sign up modal is visible
     compose: false, // Modal for composing a note
-    loadingReasons: [], //List of reasons why the application is currently loading and blocking user input
     collections: {
         //Used for OrderedCollectionViewer
         //['https://example.io']: {
@@ -43,7 +42,7 @@ const reducer = (state = initialState, action) => {
         return { ...state, showSignIn: action.show }
     } else if (action.type === 'UPDATE_SIGNUP') {
         return { ...state, showSignUp: action.show }
-    }  else if (action.type === 'UPDATE_COMPOSE') {
+    } else if (action.type === 'UPDATE_COMPOSE') {
         return { ...state, compose: action.compose }
     } else if (action.type === 'ADD_LOADING_REASON') {
         return { ...state, loadingReasons: [...state.loadingReasons, action.reason] }
@@ -72,7 +71,8 @@ store.getState();
  * @param {*} show Whether or not the compose modal is visible
  * @returns void
  */
-const updateCompose = (compose) => {
+ const updateCompose = (compose) => {
+
     return {
         type: 'UPDATE_COMPOSE',
         compose: compose
