@@ -67,8 +67,8 @@ const ComposeModal = () => {
     return (
         <>
             <Modal show={show}>
-                <Modal.Body style={{ margin: '0', width: '100%', padding: '10px' }}>
-                    <Form id="compose-note-modal" onSubmit={formik.handleSubmit}>
+                <Modal.Body style={{ margin: '0', width: '100%', padding: '10px',display:'flex',flexDirection:'column' }}>
+                    <Form id="compose-note-modal" onSubmit={formik.handleSubmit} style={{display:'flex',flexDirection:'column' }}>
                         <div className="compose-note vagabond-tile" style={{ width: '100%' }}>
                             <div className="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
                                 <PaperClip style={{ heigh: '18px', width: '18px' }} className="icon" />

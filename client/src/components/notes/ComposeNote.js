@@ -12,7 +12,7 @@ import TextArea from 'components/vagabond/TextArea.js';
 import config from 'config/config.js';
 import { store, handleError, initialState, updateCompose, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
 
-const Compose = () => {
+const Compose = (props) => {
 
 
     const initialValues = {
@@ -33,10 +33,17 @@ const Compose = () => {
             to: ['https://www.w3.org/ns/activitystreams#Public'],
             cc: [`${config.apiUrl}/actors/${actorName}/followers`]
         };
+        
+        if(props.inReplyTo !== undefined) { 
+            args.inReplyTo = props.inReplyTo;
+            console.log(args.inReplyTo)
+         }
+        
         args['@context'] = 'https://www.w3.org/ns/activitystreams';
 
         axios.post(`/api/v1/actors/${actorName}/outbox`, args)
             .then((res) => {
+
                 formik.resetForm(initialValues);
             })
             .catch(handleError);
@@ -49,16 +56,16 @@ const Compose = () => {
     });
 
 
-
+{/* <div className="icon-bar-vertical">
+                        <PaperClip style={{heigh:'18px',width:'18px'}} className="icon" />
+                        <AlertTriangle style={{heigh:'18px',width:'18px'}}  className="icon" />
+                        <Eye style={{heigh:'18px',width:'18px'}}  className="icon" />
+                    </div> */}
     return (
         <>
             <Form id="compose-note" onSubmit={formik.handleSubmit}>
                 <div className="compose-note vagabond-tile">
-                    <div className="icon-bar-vertical">
-                        <PaperClip style={{heigh:'18px',width:'18px'}} className="icon" />
-                        <AlertTriangle style={{heigh:'18px',width:'18px'}}  className="icon" />
-                        <Eye style={{heigh:'18px',width:'18px'}}  className="icon" />
-                    </div>
+                    
                     <div className="textarea-container" >
                         <TextArea name="content" placeholder="What's up?" value={formik.values.content} onChange={formik.handleChange} onBlur={formik.handleBlur}>
 
