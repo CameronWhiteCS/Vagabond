@@ -6,7 +6,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification, Like
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse
@@ -101,7 +101,7 @@ def accept_inbound_follow(activity, obj):
     db.session.commit()
 
     return make_response('', 201)
-
+    
 
 def handle_mentions(activity, obj):
     '''
@@ -171,6 +171,8 @@ def new_ob_object(activity, obj, recipient=None):
         return modify_follow(recipient, activity, obj)
     elif activity['type'] == 'Follow':
         return accept_inbound_follow(activity, obj)
+    elif activity['type'] == 'Like':
+        base_activity = Like()
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           
