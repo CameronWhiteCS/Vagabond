@@ -32,7 +32,7 @@ const Navigation = () => {
     const signOut = () => {
         axios.post('/api/v1/signout')
             .then((res) => {
-                store.dispatch({ type: 'SET_SESSION', session: initialState.session });
+                store.dispatch({ type: 'RESET' });
                 history.push('/');
             })
             .catch(handleError)
@@ -47,10 +47,8 @@ const Navigation = () => {
     }
 
     function toggleSearchBar() {
-        console.log("Toggled")
         if(searching) setSearching(false);
         else setSearching(true);
-        console.log(searching)
     }
 
     return (
