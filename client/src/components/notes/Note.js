@@ -80,34 +80,30 @@ const Note = (props) => {
                 </div>
                 <div className="info" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.activity?.object.content) }}>
                 </div>
-                <div className="content">
-                    <div className="user-and-time">
-                        <div className="handle" onClick={openProfile}>{processUsername(props.activity.actor)}</div>
-                        <div className="time">{new Date(props.activity.published).toUTCString()}</div>
-                    </div>
-                    <div className="info" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.activity.object.content) }}>
-                    </div>
-                    <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
-                        <div style={style}>
-                            <Heart onClick={handleLike} className="note-icon" />1234
-                </div>
-                        <div style={style}>
-                            <ThumbsDown onClick={handleDislike} className="note-icon" />1234
+                <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
+                    <div style={style}>
+                        <Heart onClick={handleLike} className="note-icon" />1234
                 </div>
 
-                        <div style={style}>
-                            <MessageSquare onClick={handleComment} className="note-icon" />1234
+                    <div style={style}>
+                        <ThumbsDown onClick={handleDislike} className="note-icon" />1234
                 </div>
-                        <div style={style}>
-                            <ArrowUpRight onClick={handleShare} className="note-icon" />1234
 
-                </div>
+                    <div style={style}>
+                        <Link to="/reply" title="Comment" onClick={handleComment}>
+                            <MessageSquare className="note-icon" />1234
+                    </Link>
                     </div>
+
+                    <div style={style}>
+                        <ArrowUpRight onClick={handleShare} className="note-icon" />1234
                 </div>
-                <div className="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
-                    <MoreVertical onClick={handleMore} className="note-icon" style={{ width: '20px', height: '20px' }} />
                 </div>
             </div>
+            <div className="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
+                <MoreVertical onClick={handleMore} className="note-icon" style={{ width: '20px', height: '20px' }} />
+            </div>
+        </div>
     );
 }
 
