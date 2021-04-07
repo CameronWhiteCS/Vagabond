@@ -18,6 +18,7 @@ const initialState = {
         //    items: []
         //}
     },
+    reply: undefined,
     loadingReasons: [] //List of reasons why the application is currently loading and blocking user input
 };
 
@@ -41,6 +42,8 @@ const reducer = (state = initialState, action) => {
         return { ...state, showSignIn: action.show }
     } else if (action.type === 'UPDATE_SIGNUP') {
         return { ...state, showSignUp: action.show }
+    } else if (action.type === 'UPDATE_REPLY') {
+        return { ...state, reply: action.reply }
     } else if (action.type === 'UPDATE_COMPOSE') {
         return { ...state, compose: action.compose }
     } else if (action.type === 'ADD_LOADING_REASON') {
@@ -83,6 +86,19 @@ const updateCompose = (compose) => {
         compose: compose
     };
 };
+
+/**
+ * Changes the note opened to reply to .
+ * @param {*} reply the ID of the note to reply to
+ * @returns void
+ */
+ const updateReply = (reply) => {
+    return {
+        type: 'UPDATE_REPLY',
+        reply: reply
+    };
+};
+
 
 
 /**
@@ -162,4 +178,4 @@ const removeLoadingReason = (reason) => {
     }
 }
 
-export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp, addLoadingReason, updateCompose, removeLoadingReason }
+export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp, updateReply, addLoadingReason, updateCompose, removeLoadingReason }

@@ -1,9 +1,15 @@
 a {
   text-decoration: none !important;
+  color: #6c757d;
 }
 
 body {
   background-color: #454545;
+}
+
+textarea {
+  font-size: 15px !important;
+  font-weight: 300 !important;
 }
 
 .icon-bar-horizontal-searching {
@@ -442,6 +448,7 @@ div.vagabond-navbar svg.icon {
 }
 #compose-note-modal .compose-note .textarea-container {
   flex: 1;
+  font-size: 15px;
 }
 #compose-note-modal .buttons {
   flex: 1;
@@ -485,19 +492,20 @@ div.vagabond-navbar svg.icon {
   align-items: center;
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
-  font-size: 18px;
+  font-size: 15px;
   color: white;
   border-style: none;
   height: 46%;
 }
 #compose-note .draft {
   border-radius: 12px;
+  border-color: white;
   display: flex;
   flex-direction: row;
   background-color: white;
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
-  font-size: 18px;
+  font-size: 15px;
   color: #454545;
   padding-left: 5px;
   align-items: center;
@@ -544,7 +552,7 @@ div.vagabond-navbar svg.icon {
 .note {
   display: flex;
   flex-direction: row;
-  margin: 16px auto 16px auto;
+  margin: 16px auto 0 auto;
   border: 0px !important;
   border-style: none !important;
   background-color: white;
@@ -563,8 +571,9 @@ div.vagabond-navbar svg.icon {
 }
 .note .content .user-and-time {
   display: flex;
-  height: 20px;
   align-items: baseline;
+  overflow-x: scroll;
+  flex-direction: column;
 }
 .note .content .user-and-time .handle {
   font-weight: bold;
@@ -572,8 +581,7 @@ div.vagabond-navbar svg.icon {
 }
 .note .content .user-and-time .time {
   display: flex;
-  margin-left: 8px;
-  color: #495057;
+  color: #6c757d;
   font-size: 13px;
   overflow-x: scroll;
 }
