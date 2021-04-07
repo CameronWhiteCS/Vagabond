@@ -1,14 +1,11 @@
-from vagabond.models import APObject, APObjectType
 from vagabond.__main__ import db
+from vagabond.models import APObject, APObjectType
 from vagabond.config import config
 from Crypto.PublicKey import RSA
 
-
-
 class Actor(APObject):
-    id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), primary_key=True)
-    username = db.Column(db.String(32), unique = True ,nullable=False)
 
+    username = db.Column(db.String(32), unique=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
     user = db.relationship('User', backref='actors', foreign_keys=[user_id])
 

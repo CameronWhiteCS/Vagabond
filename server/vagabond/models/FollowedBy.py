@@ -10,7 +10,7 @@ class FollowedBy(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
 
-    leader_id = db.Column(db.Integer, db.ForeignKey('actor.id'), nullable=False)
+    leader_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
     leader = db.relationship('Actor', backref='followed_by')
 
     approved = db.Column(db.Boolean, nullable=False)

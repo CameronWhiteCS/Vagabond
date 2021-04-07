@@ -19,8 +19,9 @@ db = SQLAlchemy(app)
 limiter = Limiter(app)
 cors = CORS(app)
 
-from vagabond.routes import *
 from vagabond.models import *
+from vagabond.routes import *
+
 
 db.create_all()
 

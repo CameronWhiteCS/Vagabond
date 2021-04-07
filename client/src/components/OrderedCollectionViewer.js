@@ -5,10 +5,10 @@ import {Button} from 'react-bootstrap';
 
 /**
  * props:
- *  - id: str URL of OrderedCollection object ( must not violate the CORS policy )
+ *  - id: str URL of OrderedCollection object
  *  - autoload: bool whether or not the entire collection should be automatically loaded when component renders for the first time
- *  - minId? int Minimum ID of the objects being fetched
  *  - render: func Used for item mapping + rendering
+ *  - visible? bool If set to false, the component renders an empty react fragment. This results in loading data but not diplaying it. Only use case so far is LeftBar.js
  */
 const OrderedCollectionViewer = (props) => {
 
@@ -17,7 +17,7 @@ const OrderedCollectionViewer = (props) => {
 
     /**
      * Takes a URL and removes the domain and protocol from it leaving only the target resource.
-     * Required to avoid CORS issues due to development v production having different domains.
+     * Required to avoid CORS issues due to development versus production having different domains.
      * @param {*} url 
      * @returns 
      */
@@ -40,7 +40,7 @@ const OrderedCollectionViewer = (props) => {
 
     /** Once we're signed in, determine the size of the collection and the max ID of the collection */
     useEffect(() => {
-        if(collection === undefined && session.signedIn) {
+        if(collection === undefined && session.signedIn === true) {
             initialize();
         }
     }, [session.signedIn]);
@@ -102,7 +102,7 @@ const OrderedCollectionViewer = (props) => {
     const SignedOut = () => {
         return (
             <p>
-                You must be signed in to view the collection {`${props.id}`}.
+                
             </p>
         )
     }
@@ -113,6 +113,10 @@ const OrderedCollectionViewer = (props) => {
                 There don't appear to be any items in the collection {`${props.id}`}.
             </p>
         );
+    }
+
+    if(props.visible === false) {
+        return (<></>);
     }
 
     /** Return different components depending on whether or not the person is signed or and if the data has been loaded. **/

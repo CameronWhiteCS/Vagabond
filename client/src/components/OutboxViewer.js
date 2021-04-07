@@ -18,18 +18,17 @@ const OutboxViewer = () => {
         }
     }
 
-    if (session.currentActor !== undefined) {
+
         return (
             <>
                 <h1>Outbox</h1>
-                <OrderedCollectionViewer id={`/api/v1/actors/${session.currentActor.username}/outbox`} render={render}/>
+                {
+                    session.currentActor?.username !== undefined &&
+                    <OrderedCollectionViewer id={`/api/v1/actors/${session.currentActor.username}/outbox`} render={render}/>
+                }
             </>
         )
-    } else {
-        return (
-            <></>
-        );
-    }
+    
 
 
 

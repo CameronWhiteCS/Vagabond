@@ -1,52 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { store, handleError, removeLoadingReason, addLoadingReason } from 'reducer/reducer.js';
 
-import axios from 'axios';
+import OrderedCollectionViewer from 'components/OrderedCollectionViewer.js';
 import { Link } from 'react-router-dom';
 
 
 const LeftBar = (props) => {
 
-    const [visible, setVisible] = useState(true)
+    const [visible, setVisible] = useState(true);
+    const [collections, setCollections] = useState(store.getState().collections);
     const [session, setSession] = useState(store.getState().session)
     const [following, setFollowing] = useState(0);
     const [followers, setFollowers] = useState(0);
 
     store.subscribe(() => {
         const newState = store.getState();
+        setCollections(newState.collections);
         setSession(newState.session);
     });
 
     useEffect(() => {
-        if(session.currentActor?.username !== undefined) {
-                const loadingReasonFollowing = 'Fetching following count';
-                store.dispatch(addLoadingReason(loadingReasonFollowing));
-
-                const loadingReasonFollowers = 'Fetching followers count';
-                store.dispatch(addLoadingReason(loadingReasonFollowers));
-
-
-
-                axios.get(`/api/v1/actors/${session.currentActor.username}/following`)
-                .then((res) => {
-                    setFollowing(res.data.totalItems);
-                })
-                .catch(handleError)
-                .finally(() => {
-                    store.dispatch(removeLoadingReason(loadingReasonFollowing))
-                })
-
-                axios.get(`/api/v1/actors/${session.currentActor.username}/followers`)
-                .then((res) => {
-                    setFollowers(res.data.totalItems);
-                })
-                .catch(handleError)
-                .finally(() => {
-                    store.dispatch(removeLoadingReason(loadingReasonFollowers))
-                })
-        
+        const followingUrl = `/api/v1/actors/${session.currentActor?.username}/following`;
+        const followersUrl = `/api/v1/actors/${session.currentActor?.username}/followers`;
+        if(collections[followingUrl] !== undefined) {
+            setFollowing(collections[followingUrl].totalItems);
+        } else {
+            setFollowing(0);
         }
-    }, [session.currentActor?.username]);
+        if(collections[followersUrl] !== undefined) {
+            setFollowers(collections[followersUrl].totalItems);
+        } else {
+            setFollowers(0);
+        }
+    }, [collections]);
     
 
     const styleBarInvisible = {
@@ -64,6 +50,13 @@ const LeftBar = (props) => {
 
     return (
         <>
+            {
+                session.currentActor?.username !== undefined && 
+                <>
+                    <OrderedCollectionViewer visible={false} id={`/api/v1/actors/${session.currentActor.username}/followers`} />
+                    <OrderedCollectionViewer visible={false} id={`/api/v1/actors/${session.currentActor.username}/following`} />
+                </>
+            }
             <div id="sidebar-left">
                 <div id="hideBarLeft" style={visible ? {} : styleBarInvisible} className="sidebar-top-bar">
                     <button id="hideButtonLeft" style={visible ? {} : styleButtonInvisible} className="visibility-button" onClick={toggleVisibility}>

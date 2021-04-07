@@ -156,6 +156,8 @@ def webfinger_federated():
 
     try:
         response = requests.get(f'https://{hostname}/.well-known/webfinger?resource=acct:{username}@{hostname}')
+        if response.status_code == 404:
+            return error('User not found', 404)
         return make_response(response.json(), 200)
     except:
         return error('An error occurred while attempting to look up the specified user.')
@@ -177,9 +179,12 @@ def route_notifications(user):
         if request_data['action'] == 'delete':
             notification = db.session.query(Notification).get(int(request_data['id']))
             if notification is not None:
-                db.session.delete(notification)
-                db.session.commit()
-                return make_response('', 200)
+                if notification.actor_id != actor.id:
+                    return make_response('You can\'t delete someone else\'s notifications!', 400)
+                else:
+                    db.session.delete(notification)
+                    db.session.commit()
+                    return make_response('', 200)
         elif request_data['action'] == 'delete_all':
             notifications = db.session.query(Notification).filter(Notification.actor_id == actor.id).delete()
             db.session.commit()
