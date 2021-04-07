@@ -3,7 +3,7 @@ import { Switch, Route } from 'react-router-dom';
 
 import Error404 from 'components/static/Error404.js';
 import About from 'components/static/About.js';
-import Home from 'components/static/Home.js'
+import Home from 'components/Home.js'
 import NotificationCenter from 'components/NotificationCenter.js'
 import ViewActors from 'components/session/ViewActors.js';
 import ComposeNote from 'components/notes/ComposeNote.js';

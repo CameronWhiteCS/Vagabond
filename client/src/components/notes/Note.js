@@ -6,6 +6,7 @@ import { ReactComponent as ArrowUpRight } from 'icon/arrow-up-right.svg';
 import { ReactComponent as MoreVertical } from 'icon/more-vertical.svg';
 
 import sanitizeHtml from 'sanitize-html';
+import OrderedCollectionViewer from 'components/OrderedCollectionViewer';
 
 const Note = (props) => {
 
@@ -54,48 +55,48 @@ const Note = (props) => {
 
     const processUsername = (url) => {
         let length = url.length;
-        if(url.charAt(length - 1) === '/') { url = url.substring(0, length - 1); }  
-        const parts = url.split('/');      
+        if (url.charAt(length - 1) === '/') { url = url.substring(0, length - 1); }
+        const parts = url.split('/');
         return parts[parts.length - 1]
     }
 
     return (
-        <div onClick={openNote} className="vagabond-tile note" style={{padding:'15px'}}>
-        <div className="pfp-container">
-            <img onClick={openProfile}
-                src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
-                width="100%"
-                height="auto"
-                style={{borderRadius:'50%'}}
-                alt="PFP"
-            />
-        </div>
-        <div className="content">
-            <div className="user-and-time">
-                <div className="handle" onClick={openProfile}>{processUsername(props.activity.actor)}</div>
-                <div className="time">{new Date(props.activity.published).toUTCString()}</div>
+        <div onClick={openNote} className="vagabond-tile note" style={{ padding: '15px' }}>
+            <div className="pfp-container">
+                <img onClick={openProfile}
+                    src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
+                    width="100%"
+                    height="auto"
+                    style={{ borderRadius: '50%' }}
+                    alt="PFP"
+                />
             </div>
-            <div className="info" dangerouslySetInnerHTML={{__html: sanitizeHtml(props.activity.object.content)}}>
+            <div className="content">
+                <div className="user-and-time">
+                    <div className="handle" onClick={openProfile}>{processUsername(props.activity.actor)}</div>
+                    <div className="time">{new Date(props.activity.published).toUTCString()}</div>
+                </div>
+                <div className="info" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.activity.object.content) }}>
+                </div>
+                <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
+                    <div style={style}>
+                        <Heart onClick={handleLike} className="note-icon" />1234
+                </div>
+                    <div style={style}>
+                        <ThumbsDown onClick={handleDislike} className="note-icon" />1234
+                </div>
+                    <div style={style}>
+                        <MessageSquare onClick={handleComment} className="note-icon" />1234
+                </div>
+                    <div style={style}>
+                        <ArrowUpRight onClick={handleShare} className="note-icon" />1234
+                </div>
+                </div>
             </div>
-            <div className="icon-bar-horizontal" style={{justifyContent:'space-between'}}>
-                <div style={style}>
-                    <Heart onClick={handleLike} className="note-icon" />1234
-                </div>
-                <div style={style}>
-                    <ThumbsDown onClick={handleDislike} className="note-icon" />1234
-                </div>
-                <div style={style}>
-                    <MessageSquare onClick={handleComment} className="note-icon" />1234
-                </div>
-                <div style={style}>
-                    <ArrowUpRight onClick={handleShare} className="note-icon" />1234
-                </div>
+            <div className="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
+                <MoreVertical onClick={handleMore} className="note-icon" style={{ width: '20px', height: '20px' }} />
             </div>
         </div>
-        <div className="icon-bar-vertical" style={{justifyContent:'flex-start'}}>
-            <MoreVertical onClick={handleMore} className="note-icon" style={{width:'20px',height:'20px'}}/>
-        </div>
-    </div>
     );
 }
 

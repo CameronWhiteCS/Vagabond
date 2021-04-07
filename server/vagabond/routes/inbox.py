@@ -6,7 +6,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification, Accept, Reject
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse as parse_date
@@ -189,7 +189,11 @@ def new_ob_object(activity, obj, recipient=None):
           
 
     if obj['type'] == 'Note':
-        base_object = Note()
+        base_object = APObject()
+        base_object.type = APObjectType.NOTE
+
+    if base_object is not None and 'inReplyTo' in obj:
+        base_object.set_in_reply_to(obj['inReplyTo'])
 
     
     # The user may need to be notified if a message
@@ -253,7 +257,8 @@ def get_inbox(personalized, user=None):
 
     total_items = db.session.query(APObjectRecipient.ap_object_id.distinct()).filter(APObjectRecipient.recipient.in_(followers_urls)).count()
     max_id_object = db.session.query(APObjectRecipient.ap_object_id.distinct()).filter(APObjectRecipient.recipient.in_(followers_urls)).order_by(APObjectRecipient.ap_object_id.desc()).first()
-    print(max_id_object)
+    
+    max_id = 0
     if max_id_object is not None:
         max_id = max_id_object[0]
 

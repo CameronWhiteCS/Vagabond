@@ -97,14 +97,21 @@ def route_get_actor_following_page(username, page):
     for item in items:
         ordered_items.append(item.leader)
 
-    return make_response({
+    api_url = config['api_url']
+
+    output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
-        'id': f'{config["api_url"]}/actors/{actor.username}/following/{page}',
+        'id': f'{api_url}/actors/{actor.username}/following/{page}',
         'type': 'OrderedCollectionPage',
-        'totalItems': len(items),
-        'partOf': f'{config["api_url"]}/actors/{actor.username}/following',
+        'partOf': f'{api_url}/actors/{actor.username}/following',
+        'next': f'{api_url}/actors/{actor.username}/following/{page+1}',
         'orderedItems': ordered_items
-    }, 200)
+    }
+
+    if page > 1:
+        output['prev'] = f'{api_url}/actors/{actor.username}/following/{page-1}'
+
+    return make_response(output, 200)
 
 
 @app.route('/api/v1/actors/<username>/followers')
@@ -145,11 +152,18 @@ def route_get_actor_followers_page(username, page):
     for item in items:
         ordered_items.append(item.follower)
 
-    return make_response({
+    api_url = config['api_url']
+
+    output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
-        'id': f'{config["api_url"]}/actors/{actor.username}/following/{page}',
+        'id': f'{api_url}/actors/{actor.username}/following/{page}',
         'type': 'OrderedCollectionPage',
-        'totalItems': len(items),
-        'partOf': f'{config["api_url"]}/actors/{actor.username}/following',
-        'orderedItems': ordered_items
-    }, 200)
+        'partOf': f'{api_url}/actors/{actor.username}/following',
+        'orderedItems': ordered_items,
+        'next': f'{api_url}/actors/{actor.username}/following/{page+1}'
+    }
+
+    if(page > 1):
+        output['prev'] = f'{api_url}/actors/{actor.username}/following/{page-1}'
+
+    return make_response(output, 200)
