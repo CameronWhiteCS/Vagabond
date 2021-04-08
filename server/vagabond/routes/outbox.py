@@ -122,10 +122,6 @@ def deliver(actor, message):
         except Exception as e:
             print(e)
             
-    print('All inboxes:')
-    print(all_inboxes)
-    print(json.dumps(message))
-
     for inbox in all_inboxes:
         # Don't deliver messages to ourselves!
         if inbox.replace(config['api_url'], '') == inbox:
@@ -322,6 +318,15 @@ def post_outbox_c2s(actor_name, user=None):
     base_activity.add_all_recipients(inbound_json)
     if isinstance(base_object, db.Model):
         base_object.add_all_recipients(inbound_json['object'])
+
+    # tags
+    if 'tag' in inbound_json and isinstance(inbound_json['tag'], list):
+        for tag in inbound_json['tag']:
+            base_activity.add_tag(tag)
+    
+    if isinstance(inbound_json['object'], dict) and 'tag' in inbound_json['object'] and isinstance(inbound_json['object'], dict):
+        for tag in inbound_json['object']['tag']:
+            base_object.add_tag(tag)
 
     # Handle requirements for specific object types
     if inbound_json['type'] == 'Create':
