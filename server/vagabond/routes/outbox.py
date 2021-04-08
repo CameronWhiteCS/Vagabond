@@ -141,6 +141,12 @@ def post_outbox_c2s(actor_name, user=None):
 
         if liked_object['type'] == 'Create' or liked_object['type'] == 'Note':
             base_activity.set_object(inbound_object['object'])
+            #DEBUG
+            app.logger.error('\n\n\n\n\n\n')
+            app.logger.error(resolve_ap_object('https://mastodon.online/users/gerakey2#accepts/follows/299765'))
+            app.logger.error('\n\n\n\n\n\n')
+
+            #Debug
         else:
             return error('You cannot like that kind of object.')
     elif inbound_object['type'] == 'Undo':

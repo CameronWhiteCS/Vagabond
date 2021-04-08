@@ -6,7 +6,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification, Accept, Reject
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, Note, APObjectType, Notification, Accept, Reject, Undo
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse as parse_date
@@ -44,6 +44,7 @@ def handle_inbound_accept_reject(actor, activity, obj):
         db.session.add(following)
     else:
         db.session.delete(following)
+
 
     return None
 
@@ -99,9 +100,8 @@ def handle_inbound_follow(activity, obj):
         follower_username = follower['preferredUsername']
 
     db.session.add(Notification(leader, f'{follower_username} has followed you', 'Follow'))
-
+    
     return None
-
 
 def handle_mentions(activity, obj):
     '''
@@ -180,13 +180,38 @@ def new_ob_object(activity, obj, recipient=None):
         if err_response is not None:
             return err_response
     elif activity['type'] == 'Follow':
-        return handle_inbound_follow(activity, obj)
         base_activity = Follow()
         err_response = handle_inbound_follow(activity, obj)
         if err_response is not None:
             return err_response
     elif activity['type'] == 'Undo':
-        return error('Undo Request not supported yet')
+        '''
+        Currently just removes entries from the followed_by table since
+        that is that table is seperate from the AP_object table and activity table
+        '''
+        base_activity = Undo()
+        api_url = config['api_url']
+        app.logger.error('\n\n\n\n\n\n\nUndo Request was revieved')
+        #activity being undone
+        undo_object = resolve_ap_object(obj)
+        #Person who wrote the note
+        
+        #app.logger.error('local actor is %s' , local_actor_name)
+        #app.logger.error('Undo object %s', undo_object)
+        #app.logger.error('Activity to be undone %s' , local_actor)
+        #relationship_undo = db.session.query(APObject).filter(APObject.external_id == undo_object['id'])
+
+        if undo_object['type'] == 'Follow':
+            local_actor = resolve_ap_object(undo_object['object'])
+            local_actor_name = local_actor['id'].replace(f'{api_url}/actors/', '')
+            ex_leader = db.session.query(Actor.id).filter(Actor.username == local_actor_name)
+            to_be_deleted = db.session.query(FollowedBy).filter(db.and_(FollowedBy.leader_id == ex_leader, FollowedBy.follower == undo_object['actor']))
+            to_be_deleted.delete(synchronize_session=False)
+            db.session.commit()
+        else: 
+            return error ('Cannot undo this type of activity', 400)
+        #app.logger.error('Undo Request Processing finished\n\n\n\n\n\n')
+        
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           
@@ -256,7 +281,8 @@ def get_inbox(personalized, user=None):
 
     total_items = db.session.query(APObjectRecipient.ap_object_id.distinct()).filter(APObjectRecipient.recipient.in_(followers_urls)).count()
     max_id_object = db.session.query(APObjectRecipient.ap_object_id.distinct()).filter(APObjectRecipient.recipient.in_(followers_urls)).order_by(APObjectRecipient.ap_object_id.desc()).first()
-    print(max_id_object)
+   
+    max_id = 0
     if max_id_object is not None:
         max_id = max_id_object[0]
 
