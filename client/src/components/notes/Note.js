@@ -73,12 +73,12 @@ const Note = (props) => {
                     alt="PFP"
                 />
             </div>
-            <div className="content">
+            <div className="content-container">
                 <div className="user-and-time">
                     <div className="handle" onClick={openProfile}>{processUsername(props.activity?.actor)}</div>
                     <div className="time">{new Date(props.activity?.published).toUTCString()}</div>
                 </div>
-                <div className="info" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.activity?.object.content) }}>
+                <div className="note-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.activity?.object.content), style: {color: 'black'} }}>
                 </div>
                 <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
                     <div style={style}>

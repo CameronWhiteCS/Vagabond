@@ -1,15 +1,9 @@
 a {
   text-decoration: none !important;
-  color: #6c757d;
 }
 
 body {
   background-color: #454545;
-}
-
-textarea {
-  font-size: 15px !important;
-  font-weight: 300 !important;
 }
 
 .icon-bar-horizontal-searching {
@@ -250,7 +244,6 @@ textarea {
 h1 {
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
-  font-size: 30px;
   color: white;
   margin-left: 5%;
   padding-top: 40px;
@@ -448,7 +441,6 @@ div.vagabond-navbar svg.icon {
 }
 #compose-note-modal .compose-note .textarea-container {
   flex: 1;
-  font-size: 15px;
 }
 #compose-note-modal .buttons {
   flex: 1;
@@ -492,20 +484,19 @@ div.vagabond-navbar svg.icon {
   align-items: center;
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
-  font-size: 15px;
+  font-size: 18px;
   color: white;
   border-style: none;
   height: 46%;
 }
 #compose-note .draft {
   border-radius: 12px;
-  border-color: white;
   display: flex;
   flex-direction: row;
   background-color: white;
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
-  font-size: 15px;
+  font-size: 18px;
   color: #454545;
   padding-left: 5px;
   align-items: center;
@@ -552,7 +543,7 @@ div.vagabond-navbar svg.icon {
 .note {
   display: flex;
   flex-direction: row;
-  margin: 16px auto 0 auto;
+  margin: 16px auto 16px auto;
   border: 0px !important;
   border-style: none !important;
   background-color: white;
@@ -563,34 +554,41 @@ div.vagabond-navbar svg.icon {
 .note .pfp-container {
   width: 64px;
 }
-.note .content {
+.note .content-container {
   margin: 0px 15px 0px 15px;
   word-wrap: anywhere;
-  color: #454545;
   width: 100%;
 }
-.note .content .user-and-time {
+.note .content-container .user-and-time {
   display: flex;
+  height: 20px;
   align-items: baseline;
-  overflow-x: scroll;
-  flex-direction: column;
 }
-.note .content .user-and-time .handle {
+.note .content-container .user-and-time .handle {
   font-weight: bold;
   color: #363636;
 }
-.note .content .user-and-time .time {
+.note .content-container .user-and-time .time {
   display: flex;
-  color: #6c757d;
+  margin-left: 8px;
+  color: #495057;
   font-size: 13px;
   overflow-x: scroll;
 }
-.note .content .info {
+.note .content-container .note-content {
   margin: 10px 0px 10px 0px !important;
 }
-.note .content .info p {
+.note .content-container .note-content p {
   font-size: 15px !important;
   font-weight: 300 !important;
+  color: black;
+  margin: 5px;
+  padding: 0px;
+}
+.note .content-container .note-content h1, .note .content-container .note-content h2, .note .content-container .note-content h3, .note .content-container .note-content h4, .note .content-container .note-content h5, .note .content-container .note-content h6 {
+  color: black;
+  margin: 5px;
+  padding: 0px;
 }
 .note .note-icon {
   width: 15px;

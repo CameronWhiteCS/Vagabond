@@ -12,6 +12,8 @@ import TextArea from 'components/vagabond/TextArea.js';
 import config from 'config/config.js';
 import { store, handleError, updateCompose, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
 
+import showdown from 'showdown';
+
 const ComposeModal = () => {
 
     const [show, setShow] = useState(store.getState().compose);
@@ -35,12 +37,12 @@ const ComposeModal = () => {
 
     const onSubmit = (values) => {
         const actorName = store.getState().session.currentActor.username;
-
+        
         const loadingReason = 'Composing note';
         store.dispatch(addLoadingReason(loadingReason));
         const args = {
             type: 'Note',
-            content: `<p>${values.content}</p>`,
+            content: new showdown.Converter().makeHtml(values.content),
             published: new Date().toISOString(),
             to: ['https://www.w3.org/ns/activitystreams#Public'],
             cc: [`${config.apiUrl}/actors/${actorName}/followers`]
