@@ -19,6 +19,7 @@
     "react-scripts": "4.0.1",
     "redux": "^4.0.5",
     "sanitize-html": "^2.3.3",
+    "showdown": "^1.9.1",
     "web-vitals": "^0.2.4",
     "yup": "^0.32.8"
   },

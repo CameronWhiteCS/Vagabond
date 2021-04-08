@@ -3,7 +3,7 @@ import { Switch, Route } from 'react-router-dom';
 
 import Error404 from 'components/static/Error404.js';
 import About from 'components/static/About.js';
-import Home from 'components/static/Home.js'
+import Home from 'components/Home.js'
 import NotificationCenter from 'components/NotificationCenter.js'
 import ViewActors from 'components/session/ViewActors.js';
 import ComposeNote from 'components/notes/ComposeNote.js';
@@ -12,6 +12,7 @@ import Follow from 'components/Follow.js';
 import OutboxViewer from 'components/OutboxViewer.js';
 import Following from 'components/Following.js';
 import Followers from 'components/Followers.js';
+import Reply from 'components/Reply.js';
 
 import { store } from 'reducer/reducer.js';
 
@@ -39,6 +40,7 @@ const Routes = () => {
             <Route exact path="/outbox" render={() => <OutboxViewer/>} />
             <Route exact path="/following" render={() => <Following />} />
             <Route exact path="/followers" render={() => <Followers />} />
+            <Route exact path="/reply" render={() => <Reply />} />
             <Route render={() => <Error404 />} />
         </Switch>
     );

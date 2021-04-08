@@ -14,7 +14,7 @@ class Following(db.Model):
     leader = db.Column(db.String(256), nullable=False)
     followers_collection = db.Column(db.String(256), nullable=False)
 
-    follower_id = db.Column(db.Integer, db.ForeignKey('actor.id'), nullable=False)
+    follower_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
     follower = db.relationship('Actor', backref='following')
 
     def __init__(self, follower_id, leader, followers_collection, approved=False):

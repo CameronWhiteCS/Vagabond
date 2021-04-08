@@ -27,10 +27,10 @@ const App = () => {
 
   return (
     <>
-      <Loading/>
+      <ComposeModal />
       <NotificationModal />
       <SignIn />
-      <ComposeModal />
+      <Loading/>
       <Router>
           <Navigation />
           <div id="container-root">

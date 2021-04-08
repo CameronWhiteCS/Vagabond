@@ -12,6 +12,8 @@ import TextArea from 'components/vagabond/TextArea.js';
 import config from 'config/config.js';
 import { store, handleError, updateCompose, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
 
+import showdown from 'showdown';
+
 const ComposeModal = () => {
 
     const [show, setShow] = useState(store.getState().compose);
@@ -35,12 +37,12 @@ const ComposeModal = () => {
 
     const onSubmit = (values) => {
         const actorName = store.getState().session.currentActor.username;
-
+        
         const loadingReason = 'Composing note';
         store.dispatch(addLoadingReason(loadingReason));
         const args = {
             type: 'Note',
-            content: `<p>${values.content}</p>`,
+            content: new showdown.Converter().makeHtml(values.content),
             published: new Date().toISOString(),
             to: ['https://www.w3.org/ns/activitystreams#Public'],
             cc: [`${config.apiUrl}/actors/${actorName}/followers`]
@@ -67,8 +69,8 @@ const ComposeModal = () => {
     return (
         <>
             <Modal show={show}>
-                <Modal.Body style={{ margin: '0', width: '100%', padding: '10px' }}>
-                    <Form id="compose-note-modal" onSubmit={formik.handleSubmit}>
+                <Modal.Body style={{ margin: '0', width: '100%', padding: '10px',display:'flex',flexDirection:'column' }}>
+                    <Form id="compose-note-modal" onSubmit={formik.handleSubmit} style={{display:'flex',flexDirection:'column' }}>
                         <div className="compose-note vagabond-tile" style={{ width: '100%' }}>
                             <div className="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
                                 <PaperClip style={{ heigh: '18px', width: '18px' }} className="icon" />

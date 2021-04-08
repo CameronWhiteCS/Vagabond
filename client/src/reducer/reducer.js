@@ -12,13 +12,13 @@ const initialState = {
     compose: false, // Modal for composing a note
     collections: {
         //Used for OrderedCollectionViewer
-        //['https://example.io']: {
-        //    nextPage: 1,
+        //['/api/v1/example/collection']: {
+        //    nextPage: /api/v1/example/collection/2,
         //    totalItems: undefined,
-        //    items: [],
-        //    maxId: 1337
+        //    items: []
         //}
     },
+    reply: undefined,
     loadingReasons: [] //List of reasons why the application is currently loading and blocking user input
 };
 
@@ -42,6 +42,8 @@ const reducer = (state = initialState, action) => {
         return { ...state, showSignIn: action.show }
     } else if (action.type === 'UPDATE_SIGNUP') {
         return { ...state, showSignUp: action.show }
+    } else if (action.type === 'UPDATE_REPLY') {
+        return { ...state, reply: action.reply }
     } else if (action.type === 'UPDATE_COMPOSE') {
         return { ...state, compose: action.compose }
     } else if (action.type === 'ADD_LOADING_REASON') {
@@ -58,6 +60,12 @@ const reducer = (state = initialState, action) => {
         const newCollections = { ...state.collections };
         newCollections[action.id] = action.collection;
         return { ...state, collections: newCollections };
+    } else if (action.type === 'REMOVE_COLLECTION') {
+        let newState = { ...state };
+        delete newState.collections[action.id];
+        return newState;
+    } else if (action.type === 'RESET') {
+        return initialState;
     } else {
         return state;
     }
@@ -71,13 +79,26 @@ store.getState();
  * @param {*} show Whether or not the compose modal is visible
  * @returns void
  */
- const updateCompose = (compose) => {
+const updateCompose = (compose) => {
 
     return {
         type: 'UPDATE_COMPOSE',
         compose: compose
     };
 };
+
+/**
+ * Changes the note opened to reply to .
+ * @param {*} reply the ID of the note to reply to
+ * @returns void
+ */
+ const updateReply = (reply) => {
+    return {
+        type: 'UPDATE_REPLY',
+        reply: reply
+    };
+};
+
 
 
 /**
@@ -157,4 +178,4 @@ const removeLoadingReason = (reason) => {
     }
 }
 
-export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp, addLoadingReason, updateCompose, removeLoadingReason }
+export { store, initialState, createNotification, hideNotification, handleError, updateSignIn, updateSignUp, updateReply, addLoadingReason, updateCompose, removeLoadingReason }
