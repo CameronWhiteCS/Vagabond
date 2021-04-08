@@ -11,3 +11,4 @@ class APObjectType(enum.Enum):
     LIKE = 'Like'
     ACCEPT = 'Accept'
     REJECT = 'Reject'
+    MENTION = 'Mention'

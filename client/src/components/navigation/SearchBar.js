@@ -1,4 +1,4 @@
-import { initialState, store, handleError, updateSignIn,  addLoadingReason, removeLoadingReason } from '../../reducer/reducer.js';
+import { initialState, store, handleError, updateSignIn, addLoadingReason, removeLoadingReason } from '../../reducer/reducer.js';
 import { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { Form, Button } from 'react-bootstrap';
@@ -16,42 +16,31 @@ const SearchBar = () => {
     })
 
     const parseHandle = (input) => {
-        if(input.charAt(0) === '@') {
+        if (input.charAt(0) === '@') {
             input = input.substring(1, input.length);
-        } 
+        }
         const parts = input.split('@');
         const username = parts[0]
         const hostname = parts[1]
         return [username, hostname]
     }
 
-    const processWebfingerResponse = (res) => {
+    const processProxyResponse = (res) => {
 
-        let foreignActor;
-        res.data.links.every((link) => {
-            if (link.rel === 'self') {
-                foreignActor = link.href;
-                return false;
-            }
-            return true;
-        });
-        if (foreignActor) {
+        if (res.data !== undefined) {
 
             const params = {
                 ['@context']: 'https://www.w3.org/ns/activitystreams',
                 type: 'Follow',
                 actor: currentActor.id,
-                object: foreignActor
+                object: res.data.id
             }
 
-            const loadingReason = `Sending follow request to ${foreignActor}`;
+            const loadingReason = `Sending follow request to ${res.data?.preferredUsername}`;
             store.dispatch(addLoadingReason(loadingReason));
             axios.post(`/api/v1/actors/${currentActor.username}/outbox`, params)
                 .then((res) => {
-                    store.dispatch({
-                        type: 'REMOVE_COLLECTION',
-                        id: `/api/v1/actors/${currentActor.username}/following`
-                    })
+                    console.log(res.data);
                 })
                 .catch(handleError)
                 .finally(() => {
@@ -67,8 +56,8 @@ const SearchBar = () => {
         const loadingReason = 'Looking up user';
         store.dispatch(addLoadingReason(loadingReason));
         const [username, hostname] = parseHandle(handle);
-        axios.get(`/api/v1/webfinger?username=${username}&hostname=${hostname}`)
-            .then(processWebfingerResponse)
+        axios.get(`/api/v1/proxy?type=actor&username=${username}&hostname=${hostname}`)
+            .then(processProxyResponse)
             .catch(handleError)
             .finally(() => {
                 store.dispatch(removeLoadingReason(loadingReason));
@@ -77,14 +66,14 @@ const SearchBar = () => {
 
     return (
         <Form className="input-part" onSubmit={onSubmit}>
-                <Form.Control
-                        id="user-search"
-                        placeholder="e.g. user@mastodon.online"
-                        onChange={(e) => setHandle(e.target.value)}
-                        style={{boxShadow: '0', border: '0'}}
-                />
-                <Button type="submit" id="search-button">Follow</Button>
-        </Form> 
+            <Form.Control
+                id="user-search"
+                placeholder="e.g. user@mastodon.online"
+                onChange={(e) => setHandle(e.target.value)}
+                style={{ boxShadow: '0', border: '0' }}
+            />
+            <Button type="submit" id="search-button">Follow</Button>
+        </Form>
     );
 
 }

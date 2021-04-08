@@ -30,6 +30,33 @@ class APObjectAttributedTo(db.Model):
     ap_object_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
 
 
+class APObjectTag(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.Enum(APObjectType))
+    href= db.Column(db.String(256))
+    name = db.Column(db.String(64))
+    ap_object_id = db.Column(db.ForeignKey('ap_object.id'), nullable=False)
+
+    ap_object = db.relationship('APObject', foreign_keys=[ap_object_id], backref='tags')
+
+    def __init__(self, ap_object_id, type, href, name):
+        self.ap_object_id = ap_object_id
+        self.type = type
+        self.href = href
+        self.name = name
+
+    def to_dict(self):
+        output = {
+            'type': self.type.value
+        }
+        if self.href is not None:
+            output['href'] = self.href
+        if self.name is not None:
+            output['name'] = self.name
+            
+        return output
+
+
 
 class APObject(db.Model):
     '''
@@ -139,11 +166,16 @@ class APObject(db.Model):
         #attributedTo
         if hasattr(self, 'external_author_id') and self.external_author_id is not None:
             output['attributedTo'] = self.external_author_id
-
         elif hasattr(self, 'internal_author_id') and self.internal_author_id is not None:
             attributed_to = db.session.query(APObject).get(self.internal_author_id)
             if attributed_to is not None:
                 output['attributedTo'] = attributed_to.to_dict()['id']
+
+        #tag property
+        if len(self.tags) > 0:
+            output['tag'] = []
+            for tag in self.tags:
+                output['tag'].append(tag.to_dict())
 
         if hasattr(self, 'content') and self.content is not None:
             output['content'] = self.content
@@ -161,6 +193,19 @@ class APObject(db.Model):
 
         return output
 
+
+    def add_tag(self, tag):
+        '''
+         def __init__(self, ap_object_id, type, href, name):
+            Adds a tag to this object.
+            tag: dict | APObjectTag
+        '''
+        if isinstance(tag, dict):
+            self.tags.append(APObjectTag(self.id, tag['type'], tag.get('href'), tag.get('name')))
+        elif isinstance(tag, APObjectTag):
+            self.tags.append(tag)
+        else:
+            raise Exception('APObject#add_tag method only accepts dictionaries and instances of APObjectTag as input. Some other type was provided.')
 
 
     def add_recipient(self, method, recipient):

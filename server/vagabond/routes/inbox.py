@@ -103,42 +103,40 @@ def handle_inbound_follow(activity, obj):
     return None
 
 
-def handle_mentions(activity, obj):
+def handle_tags(base_activity, base_object, activity, obj):
     '''
+        base_activity: db model
+        base_object: db model
+        activity: incoming JSON
+        obj: incoming JSON
+
         Takes the incoming activity (and possibly object) and notifies
-        the user if he's been cc'd, bcc'd, to'd, or bto'd for certain kinds of activities
+        the user if he's been tagged in the activity or object.
 
-        The notification is flished to the database but not commited
+        The notification is flushed to the database but not commited
     '''
 
-    activity_recipients = []
-    object_recipients = []
+    def notify(tag):
+        if 'name' in tag:
+            splits = tag['name'].split('@')
+            if len(splits) == 3 and splits[2].lower() == config['domain'].lower():
+                name = splits[1]
+                actor = db.session.query(Actor).filter(db.func.lower(name) == db.func.lower(Actor.username)).first()
+                if actor is not None:
+                    db.session.add(Notification(actor, f'{activity["actor"]} mentioned you', 'Mention'))
 
-    public_url = 'https://www.w3.org/ns/activitystreams#Public'
-    keys = ['to', 'bto', 'cc', 'bcc']
+    if 'tag' in activity and isinstance(activity['tag'], list):
+        for tag in obj['tag']:
+            base_activity.add_tag(tag)
+            notify(tag)
+    
+    if base_object is not None and 'tag' in obj and isinstance(obj['tag'], list):
+        for tag in obj['tag']:
+            base_object.add_tag(tag)
+            notify(tag)
 
-    for key in keys:
-        if key in activity:
-            if isinstance(activity[key], list) is False:
-                activity[key] = [activity[key]]
-            for value in activity[key]:
-                if value != public_url:
-                    activity_recipients.append(value)
-        if obj is not None and key in obj:
-            if isinstance(obj[key], list) is False:
-                obj[key] = [obj[key]]
-            for value in obj[key]:
-                if value != public_url:
-                    object_recipients.append(value)
+    db.session.flush()
 
-    if activity['type'] == 'Create' and obj['type'] == 'Note':
-        for recipient in object_recipients:
-            api_url = config['api_url']
-            recipient = recipient.replace(f'{api_url}/actors/', '')
-            actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == recipient.lower()).first()
-            if actor is None:
-                continue
-            db.session.add(Notification(actor, f'{activity["actor"]} mentioned you. ', 'Mention'))
 
 
 '''
@@ -195,21 +193,27 @@ def new_ob_object(activity, obj, recipient=None):
     if base_object is not None and 'inReplyTo' in obj:
         base_object.set_in_reply_to(obj['inReplyTo'])
 
-    
-    # The user may need to be notified if a message
-    # comes in and he's been to'd, bto'd, cc'd, or bcc'd
-    handle_mentions(activity, obj)
 
     # Assign common properties to the generic activity
     db.session.add(base_activity)
     db.session.flush()
+
+    #set the actor and external id
     base_activity.external_id = activity['id']
     base_activity.external_actor_id = activity['actor']
+
+    #published
     if 'published' in activity:
         base_activity.published = parse_date(activity['published'])
+    
+    # recipients
     base_activity.add_all_recipients(activity)
+
+    #set the boject that the activity is acting upon
     base_activity.external_object_id = obj['id']
 
+    # Parse incoming tags
+    handle_tags(base_activity, base_object, activity, obj)
 
     # Assign common properties to the generic object
     if base_object is not None:
