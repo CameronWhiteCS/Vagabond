@@ -192,14 +192,8 @@ def new_ob_object(activity, obj, recipient=None):
         base_activity = Undo()
         api_url = config['api_url']
         app.logger.error('\n\n\n\n\n\n\nUndo Request was revieved')
-        #activity being undone
+
         undo_object = resolve_ap_object(obj)
-        #Person who wrote the note
-        
-        #app.logger.error('local actor is %s' , local_actor_name)
-        #app.logger.error('Undo object %s', undo_object)
-        #app.logger.error('Activity to be undone %s' , local_actor)
-        #relationship_undo = db.session.query(APObject).filter(APObject.external_id == undo_object['id'])
 
         if undo_object['type'] == 'Follow':
             local_actor = resolve_ap_object(undo_object['object'])
