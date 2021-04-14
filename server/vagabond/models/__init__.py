@@ -1,5 +1,5 @@
 from .APObjectType import APObjectType
-from .APObject import APObjectRecipient, APObjectAttributedTo, APObject
+from .APObject import APObjectRecipient, APObjectAttributedTo, APObjectTag, APObject
 from .Activity import Activity
 from .Following import Following
 from .User import User
