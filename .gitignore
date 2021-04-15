@@ -2,8 +2,5 @@
 *.eslintcache
 server/vagabond/static/*
 .vscode/*
-<<<<<<< HEAD
 server/wsgi.py
-=======
 client/package-lock.json
->>>>>>> upstream/master
