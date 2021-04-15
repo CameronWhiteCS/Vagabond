@@ -12,6 +12,7 @@ import OutboxViewer from 'components/OutboxViewer.js';
 import Following from 'components/Following.js';
 import Followers from 'components/Followers.js';
 import Reply from 'components/Reply.js';
+import LikedViewer from 'components/LikedViewer.js';
 
 import { store } from 'reducer/reducer.js';
 
@@ -39,6 +40,7 @@ const Routes = () => {
             <Route exact path="/following" render={() => <Following />} />
             <Route exact path="/followers" render={() => <Followers />} />
             <Route exact path="/reply" render={() => <Reply />} />
+            <Route exact path="/liked" render={() => <LikedViewer/>} />
             <Route render={() => <Error404 />} />
         </Switch>
     );

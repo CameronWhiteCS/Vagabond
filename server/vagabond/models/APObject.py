@@ -15,7 +15,7 @@ class APObjectRecipient(db.Model):
     method = db.Column(db.String(3), nullable=False)
     recipient = db.Column(db.String(256), nullable=False)
 
-    ap_object = db.relationship('APObject', backref='recipients')
+    ap_object = db.relationship('APObject', foreign_keys=[ap_object_id], backref=db.backref('recipients', cascade='all, delete-orphan'))
 
     def __init__(self, method, recipient):
         self.method = method
@@ -28,6 +28,8 @@ class APObjectAttributedTo(db.Model):
     internal_actor_id = db.Column(db.ForeignKey('ap_object.id'))
     external_actor_id = db.Column(db.String(1024))
     ap_object_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), nullable=False)
+    
+    ap_object = db.relationship('APObject', foreign_keys=[ap_object_id], backref=db.backref('attributions', cascade='all, delete-orphan'))
 
 
 class APObjectTag(db.Model):
@@ -37,15 +39,16 @@ class APObjectTag(db.Model):
     name = db.Column(db.String(64))
     ap_object_id = db.Column(db.ForeignKey('ap_object.id'), nullable=False)
 
-    ap_object = db.relationship('APObject', foreign_keys=[ap_object_id], backref='tags')
+    ap_object = db.relationship('APObject', foreign_keys=[ap_object_id], backref=db.backref('tags', cascade='all, delete-orphan'))
 
-    def __init__(self, ap_object_id, type, href, name):
+    def __init__(self, ap_object_id, _type, href, name):
         self.ap_object_id = ap_object_id
-        self.type = type
+        self.type = _type
         self.href = href
         self.name = name
 
     def to_dict(self):
+
         output = {
             'type': self.type.value
         }
@@ -76,6 +79,8 @@ class APObject(db.Model):
     internal_author_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'))
     external_author_id = db.Column(db.String(256))
 
+    
+
     __mapper_args__ = {
         'polymorphic_identity': APObjectType.OBJECT,
         'polymorphic_on': type
@@ -84,12 +89,9 @@ class APObject(db.Model):
     @staticmethod
     def get_object_from_url(url):
         '''
-            Takes an input URL originating from this server
-            and returns the corresponding database model. For example,
-            if the input to this method is
-            https://cameron.teamvagabond.com/api/v1/objects/1, this method
-            will return db.session.query(APObject).get(1)
-            This works for the /api/v1/actors/<actorname> route as well.
+            Takes the provided URL and attempts to locate an object with the matching external_id.
+            This method works even for locally stored objects without an external_id property by parsing
+            the provided URL and extracting the ID. 
         '''
         api_url = config['api_url']
         if url.replace(api_url, '') != url:
@@ -108,6 +110,10 @@ class APObject(db.Model):
                         return db.session.query(vagabond.models.APObject).get(_id)
                     except:
                         return None
+        else:
+            obj = db.session.query(APObject).filter(APObject.external_id == url).first()
+            return obj
+
 
     def set_in_reply_to(self, in_reply_to):
         '''
@@ -201,7 +207,11 @@ class APObject(db.Model):
             tag: dict | APObjectTag
         '''
         if isinstance(tag, dict):
-            self.tags.append(APObjectTag(self.id, tag['type'], tag.get('href'), tag.get('name')))
+            _type = None
+            if tag['type'] == 'Mention':
+                self.tags.append(APObjectTag(self.id, APObjectType.MENTION, tag.get('href'), tag.get('name')))
+            else:
+                raise Exception('Only supported tag type is Mention')
         elif isinstance(tag, APObjectTag):
             self.tags.append(tag)
         else:
@@ -241,7 +251,6 @@ class APObject(db.Model):
                 
                 for _value in value:
                     self.add_recipient(key, _value)
-
 
 
     def attribute_to(self, author):

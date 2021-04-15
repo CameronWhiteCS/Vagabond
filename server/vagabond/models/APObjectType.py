@@ -12,3 +12,4 @@ class APObjectType(enum.Enum):
     ACCEPT = 'Accept'
     REJECT = 'Reject'
     MENTION = 'Mention'
+    UNDO = 'Undo'
