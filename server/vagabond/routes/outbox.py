@@ -283,6 +283,7 @@ def handle_follow(inbound_json, actor, base_activity, base_object, is_local):
         db.session.add(Notification(
             local_leader, f'{actor_dict["preferredUsername"]} has followed you.', 'Follow'))
         db.session.add(new_followed_by)
+        db.session.commit()
     else:
         db.session.commit()  # This is required so when we get an Accept activity back before the end of this request, we're able to find the Follow activity
         try:
