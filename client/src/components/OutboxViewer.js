@@ -1,8 +1,9 @@
-import OrderedCollectionViewer from 'components/OrderedCollectionViewer.js';
-import Note from 'components/notes/Note.js';
+import { useState } from 'react';
 
 import { store } from 'reducer/reducer.js';
-import { useState } from 'react';
+
+import OrderedCollectionViewer from 'components/OrderedCollectionViewer.js';
+import Note from 'components/notes/Note.js';
 
 const OutboxViewer = () => {
 
@@ -18,19 +19,15 @@ const OutboxViewer = () => {
         }
     }
 
-
-        return (
-            <>
-                <h1>Outbox</h1>
-                {
-                    session.currentActor?.username !== undefined &&
-                    <OrderedCollectionViewer id={`/api/v1/actors/${session.currentActor.username}/outbox`} render={render}/>
-                }
-            </>
-        )
-    
-
-
+    return (
+        <>
+            <h1>Outbox</h1>
+            {
+                session.currentActor?.username !== undefined &&
+                <OrderedCollectionViewer id={`/api/v1/actors/${session.currentActor.username}/outbox`} render={render} />
+            }
+        </>
+    )
 
 }
 

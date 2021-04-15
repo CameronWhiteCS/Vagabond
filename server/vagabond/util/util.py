@@ -5,6 +5,7 @@
 import requests
 
 from vagabond.config import config
+from vagabond.models import APObject
 
 from bs4 import BeautifulSoup
 from datetime import datetime
