@@ -16,17 +16,11 @@ import { ReactComponent as Eye } from 'icon/eye.svg'
 import { ReactComponent as Archive } from 'icon/archive.svg'
 import { ReactComponent as Navigation } from 'icon/navigation.svg'
 
-<<<<<<< HEAD
-import showdown from 'showdown';
-
-const Compose = (props) => {
-=======
 /**
  * props
  * - props.inReplyTo = Note object being replied to
  */
 const ComposeNote = (props) => {
->>>>>>> upstream/master
 
     const [show, setShow] = useState(store.getState().compose);
 
@@ -161,15 +155,6 @@ const ComposeNote = (props) => {
         onSubmit: onSubmit
     });
 
-<<<<<<< HEAD
-
-{/* <div className="icon-bar-vertical">
-                        <PaperClip style={{heigh:'18px',width:'18px'}} className="icon" />
-                        <AlertTriangle style={{heigh:'18px',width:'18px'}}  className="icon" />
-                        <Eye style={{heigh:'18px',width:'18px'}}  className="icon" />
-                    </div> */}
-=======
->>>>>>> upstream/master
     return (
         <Form id="compose-note-modal" onSubmit={formik.handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
             <div className="compose-note vagabond-tile" style={{ width: '100%' }}>
