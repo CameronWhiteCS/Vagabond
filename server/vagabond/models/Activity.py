@@ -9,8 +9,8 @@ class Activity(APObject):
     internal_actor_id = db.Column(db.ForeignKey('ap_object.id'))
     external_actor_id = db.Column(db.String(1024))
     
-    #actor = db.relationship('APObject', foreign_keys=[internal_actor_id]) #Person performing the activity
-    #object = db.relationship('APObject', foreign_keys=[internal_object_id], uselist=False)
+    internal_object = db.relationship('APObject', foreign_keys=[internal_object_id], remote_side=APObject.id, backref=db.backref('activities', cascade='all, delete-orphan'))
+
 
     __mapper_args__ = {
         'polymorphic_identity': APObjectType.ACTIVITY
@@ -27,10 +27,21 @@ class Activity(APObject):
         '''
         if isinstance(obj, db.Model):
             self.internal_object_id = obj.id
+            
+
         elif isinstance(obj, str):
+            interal_object = APObject.get_object_from_url(obj)
+            if interal_object is not None:
+                self.internal_object_id = interal_object.id
+
             self.external_object_id = obj
+
         elif isinstance(obj, dict) and 'id' in obj:
+            interal_object = APObject.get_object_from_url(obj['id'])
+            if interal_object is not None:
+                self.internal_object_id = interal_object.id      
             self.external_object_id = obj['id']
+
         else:
             raise Exception('Activity#set_object method requires an APObject, a string, or a dictionary')
         
@@ -53,7 +64,13 @@ class Activity(APObject):
         output = super().to_dict()
 
         if self.internal_object_id is not None:
-            output['object'] = db.session.query(APObject).get(self.internal_object_id).to_dict()
+            _object = db.session.query(APObject).get(self.internal_object_id)
+            if _object is not None:
+                if not isinstance(_object, Activity):
+                    output['object'] = _object.to_dict()
+                else:
+                    output['object'] = _object.to_dict()['id']
+
         elif self.external_object_id is not None:
             output['object'] = self.external_object_id
         else:

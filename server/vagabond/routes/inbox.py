@@ -1,3 +1,5 @@
+import json
+
 from math import ceil
 
 from flask import request, make_response
@@ -6,12 +8,10 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject, Like
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse as parse_date
-
-import json
 
 '''
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -138,14 +138,14 @@ def handle_tags(base_activity, base_object, activity, obj):
     db.session.flush()
 
 
-
 '''
     =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
         HELPER FUNCTIONS - OTHER
     =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 '''
 
-def new_ob_object(activity, obj, recipient=None):
+
+def new_ob_object(activity, obj, recipient=None, actor=None):
     '''
         activity: dict
             The activity being preformed
@@ -164,11 +164,17 @@ def new_ob_object(activity, obj, recipient=None):
         The newly created objects are added to the database, flushed, and committed.
     '''
 
+    if obj is None:
+        return error('Failed to resolve target object.')
+
+    #Set polymorphic type
     base_activity = None
     base_object = None
 
     if activity['type'] == 'Create':
         base_activity = Create()
+    elif activity['type'] == 'Like':
+        base_activity = Like()
     elif (activity['type'] == 'Accept' or activity['type'] == 'Reject') and obj['type'] == 'Follow' and recipient is not None:
         if activity['type'] == 'Accept':
             base_activity = Accept()
@@ -190,11 +196,7 @@ def new_ob_object(activity, obj, recipient=None):
         base_object = APObject()
         base_object.type = APObjectType.NOTE
 
-    if base_object is not None and 'inReplyTo' in obj:
-        base_object.set_in_reply_to(obj['inReplyTo'])
-
-
-    # Assign common properties to the generic activity
+    # flsuh to db to generate ID needed for assigning generic attributes
     db.session.add(base_activity)
     db.session.flush()
 
@@ -206,6 +208,10 @@ def new_ob_object(activity, obj, recipient=None):
     if 'published' in activity:
         base_activity.published = parse_date(activity['published'])
     
+    #inReplyTo
+    if base_object is not None and 'inReplyTo' in obj:
+        base_object.set_in_reply_to(obj['inReplyTo'])
+
     # recipients
     base_activity.add_all_recipients(activity)
 

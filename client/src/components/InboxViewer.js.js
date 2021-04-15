@@ -18,9 +18,6 @@ const InboxViewer = () => {
         </>
     )
 
-
-
-
 }
 
 export default InboxViewer;

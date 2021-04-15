@@ -1,22 +1,26 @@
+import React, { useState } from 'react';
 import axios from 'axios';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { Form, Button } from 'react-bootstrap';
-import React, { useState, useEffect } from 'react';
-import { ReactComponent as PaperClip } from 'icon/paperclip.svg'
-import { ReactComponent as AlertTriangle } from 'icon/alert-triangle.svg'
-import { ReactComponent as Eye } from 'icon/eye.svg'
-import { ReactComponent as Archive } from 'icon/archive.svg'
-import { ReactComponent as Navigation } from 'icon/navigation.svg'
+import showdown from 'showdown';
+
 import TextArea from 'components/vagabond/TextArea.js';
 import config from 'config/config.js';
 import { store, handleError, updateCompose, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
 import { actorHandle as actorHandleRegex } from 'util/regex.js';
 
+import { ReactComponent as PaperClip } from 'icon/paperclip.svg'
+import { ReactComponent as AlertTriangle } from 'icon/alert-triangle.svg'
+import { ReactComponent as Eye } from 'icon/eye.svg'
+import { ReactComponent as Archive } from 'icon/archive.svg'
+import { ReactComponent as Navigation } from 'icon/navigation.svg'
 
-import showdown from 'showdown';
-
-const Compose = () => {
+/**
+ * props
+ * - props.inReplyTo = Note object being replied to
+ */
+const ComposeNote = (props) => {
 
     const [show, setShow] = useState(store.getState().compose);
 
@@ -54,6 +58,10 @@ const Compose = () => {
             tag: tag
         };
 
+        if (props.inReplyTo !== undefined) {
+            args.inReplyTo = props.inReplyTo.id;
+        }
+
         console.log(args);
 
         axios.post(`/api/v1/actors/${actorName}/outbox`, args)
@@ -79,6 +87,10 @@ const Compose = () => {
         const bcc = [];
         const tag = []
 
+        if(props.inReplyTo !== undefined) {
+            cc.push(props.inReplyTo.attributedTo);
+        }
+
         let content = values.content;
 
         const tokens = content.split(' ');
@@ -90,14 +102,14 @@ const Compose = () => {
             }
         });
 
-        //Second step: get data via proxy
+        //Second step: get data for mentions by proxy
         tokens.forEach((token) => {
             if (token.match(actorHandleRegex)) {
                 const splits = token.split('@');
                 const username = splits[1];
                 const hostname = splits[2];
 
-                const loadingReason = `Look up @${username}@${hostname}`;
+                const loadingReason = `Looking up @${username}@${hostname}`;
                 store.dispatch(addLoadingReason(loadingReason))
                 axios.get(`/api/v1/proxy?type=actor&username=${username}&hostname=${hostname}`)
                     .then((res) => {
@@ -107,7 +119,7 @@ const Compose = () => {
                         }
 
                         to.push(res.data.id);
-                        content = content.replaceAll(`@${username}@${hostname}`, `[@${username}@${hostname}](${res.data.id})`);
+                        content = content.replaceAll(`@${username}@${hostname}`, `[@${username.replaceAll('_', '\\_')}@${hostname.replaceAll('_', '\\_')}](${res.data.id})`);
                         tag.push({
                             type: 'Mention',
                             ['href']: res.data.id,
@@ -129,6 +141,10 @@ const Compose = () => {
         });
 
 
+        //Finally, submit if no one was mentioned and we weren't replying to anything. 
+        if (totalActors === 0) {
+            submitNote(content, to, bto, cc, bcc, tag);
+        }
 
     }
 
@@ -137,8 +153,6 @@ const Compose = () => {
         validationSchema: validationSchema,
         onSubmit: onSubmit
     });
-
-
 
     return (
         <Form id="compose-note-modal" onSubmit={formik.handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
@@ -177,4 +191,4 @@ const Compose = () => {
 
 }
 
-export default Compose;
+export default ComposeNote;
