@@ -11,6 +11,7 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
+
 from vagabond.models import Actor, APObject, APObjectType, Following, Activity, Create, Follow, FollowedBy, Like, Notification, Note, Undo, Delete
 from vagabond.routes import error, require_signin
 from vagabond.config import config
@@ -386,12 +387,14 @@ def post_outbox_c2s(actor_name, user=None):
     if inbound_json['type'] == 'Create':
         if inbound_json['object']['type'] == 'Note':
             base_object.attribute_to(actor)
+
             base_object.content = inbound_json['object']['content']
     
     elif inbound_json['type'] == 'Follow':
         return handle_follow(inbound_json, actor, base_activity, base_object, is_local)
 
     elif inbound_json['type'] == 'Like':
+
         liked_object_url = None
         if isinstance(inbound_json['object'], dict):
             liked_object_url = inbound_json['object']['id']
@@ -425,6 +428,7 @@ def post_outbox_c2s(actor_name, user=None):
             return err_response
 
     #finally, commit changes to database and then deliver the objects.
+
     db.session.commit()
 
     deliver(actor, delivery_message)
