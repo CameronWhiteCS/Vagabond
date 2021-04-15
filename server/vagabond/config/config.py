@@ -6,7 +6,7 @@ config = {
     'mysql_port': '3306',
     'mysql_database': 'cameron',
     'domain': 'cameron.teamvagabond.com',
-    'api_url': 'https://gerrad.teamvagabond.com/api/v1',
+    'api_url': 'https://cameron.teamvagabond.com/api/v1',
 
     'public_key': '''-----BEGIN PUBLIC KEY-----
 MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAli4avy7N6GwfPnlWnKPU
