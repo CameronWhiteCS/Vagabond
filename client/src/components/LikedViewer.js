@@ -16,7 +16,7 @@ const LikedViewer = () => {
 
     const render = (item) => {
         if(item.object?.id !== undefined && item.object?.type == 'Note') {
-            return <Note activity={item} key={item.id} />
+            return <Note note={item.object} key={item.id} />
         }
     }
 

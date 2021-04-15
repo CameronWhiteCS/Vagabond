@@ -17,7 +17,7 @@ import config from 'config/config.js';
 import sanitizeHtml from 'sanitize-html';
 
 /**
-* props.activity: relevant note object
+* props.note: relevant note object
  */
 const Note = (props) => {
 
@@ -38,9 +38,9 @@ const Note = (props) => {
         axios.post(`/api/v1/actors/${currentActor.username}/outbox`, {
             ['@context']: 'https://www.w3.org/ns/activitystreams',
             type: 'Like',
-            object: props.activity.object,
+            object: props.note,
             to: ['https://www.w3.org/ns/activitystreams#Public'],
-            cc: [props.activity.object.attributedTo, `${config.apiUrl}/actors/${currentActor.username}/followers`]
+            cc: [props.note.attributedTo, `${config.apiUrl}/actors/${currentActor.username}/followers`]
         })
             .then((res) => {
 
@@ -49,7 +49,7 @@ const Note = (props) => {
     }
 
     const handleComment = () => {
-        store.dispatch(updateReply(props.activity));
+        store.dispatch(updateReply(props.note));
     }
 
     const handleDelete = () => {
@@ -57,7 +57,7 @@ const Note = (props) => {
         const args = {
             ['@context']: ['https://www.w3.org/ns/activitystreams'],
             type: 'Delete',
-            object: props.activity.object.id,
+            object: props.note.id,
             published: new Date().toISOString(),
             to: ['https://www.w3.org/ns/activitystreams#Public'],
             cc: [`${config.apiUrl}/actors/${currentActor.username}/followers`]
@@ -116,10 +116,10 @@ const Note = (props) => {
             </div>
             <div className="content-container">
                 <div className="user-and-time">
-                    <div className="handle" onClick={openProfile}>{processUsername(props.activity?.object?.attributedTo)}</div>
-                    <div className="time">{new Date(props.activity?.object?.published).toUTCString()}</div>
+                    <div className="handle" onClick={openProfile}>{processUsername(props.note?.attributedTo)}</div>
+                    <div className="time">{new Date(props.note?.published).toUTCString()}</div>
                 </div>
-                <div className="note-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.activity?.object?.content), style: { color: 'black' } }}>
+                <div className="note-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.note?.content), style: { color: 'black' } }}>
                 </div>
                 <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
                     <div style={style}>
@@ -134,7 +134,7 @@ const Note = (props) => {
                         <ArrowUpRight onClick={handleShare} className="note-icon" />
                     </div>
                     {
-                        props.activity.actor == `${config.apiUrl}/actors/${currentActor?.username}` &&
+                        props.note.attributedTo == `${config.apiUrl}/actors/${currentActor?.username}` &&
                         <div style={style}>
                             <Trash2 onClick={handleDelete} className="note-icon" />
                         </div>
