@@ -66,10 +66,7 @@ class Activity(APObject):
         if self.internal_object_id is not None:
             _object = db.session.query(APObject).get(self.internal_object_id)
             if _object is not None:
-                if not isinstance(_object, Activity):
                     output['object'] = _object.to_dict()
-                else:
-                    output['object'] = _object.to_dict()['id']
 
         elif self.external_object_id is not None:
             output['object'] = self.external_object_id

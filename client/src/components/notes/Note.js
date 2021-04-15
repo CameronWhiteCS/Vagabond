@@ -3,12 +3,14 @@ import { ReactComponent as MessageSquare } from 'icon/message-square.svg';
 import { ReactComponent as ArrowUpRight } from 'icon/arrow-up-right.svg';
 import { ReactComponent as MoreVertical } from 'icon/more-vertical.svg';
 import { ReactComponent as Trash2 } from 'icon/trash-2.svg';
+import { ReactComponent as ThumbsDown } from 'icon/thumbs-down.svg';
+
 
 import React, { useState } from 'react';
 import { addLoadingReason, handleError, removeLoadingReason, updateReply } from 'reducer/reducer.js';
 import { store } from 'reducer/reducer.js';
 
-import { Link, useHistory } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 import axios from 'axios';
 import config from 'config/config.js';
@@ -17,14 +19,18 @@ import config from 'config/config.js';
 import sanitizeHtml from 'sanitize-html';
 
 /**
-* props.note: relevant note object
+ * 
+ * @param {*} props
+ * @param {Note} props.note - The ActivityStreams Note object being displayed by this component
+ * @param {Like=} props.like - The Like activity associated with this object performed by the user. 
+ * @returns 
  */
 const Note = (props) => {
 
     const [currentActor, setCurrentActor] = useState(store.getState().session.currentActor);
-    const [deleted, setDeleted] = useState(false);
+    const [invisible, setInvisible] = useState(false);
 
-    store.subscribe(() =>{
+    store.subscribe(() => {
         setCurrentActor(store.getState().session.currentActor);
     });
 
@@ -63,31 +69,45 @@ const Note = (props) => {
             cc: [`${config.apiUrl}/actors/${currentActor.username}/followers`]
         };
 
+
+
+        if (props.note.inReplyTo?.attributedTo !== undefined) {
+            args.cc.push(props.note.inReplyTo.attributedTo);
+        }
+
         console.log(args);
 
         const loadingReason = 'Deleting note'
         store.dispatch(addLoadingReason(loadingReason))
         axios.post(`/api/v1/actors/${currentActor.username}/outbox`, args)
+            .then((res) => {
+                setInvisible(true);
+            })
+            .catch(handleError)
+            .finally(() => {
+                store.dispatch(removeLoadingReason(loadingReason))
+            })
+    }
+
+    const undoLike = () => {
+        const loadingReason = 'Undoing like activity'
+        store.dispatch(addLoadingReason(loadingReason));
+        axios.post(`/api/v1/actors/${currentActor.username}/outbox`, {
+            ['@context']: 'https://www.w3.org/ns/activitystreams',
+            type: 'Undo',
+            object: props.like,
+            to: ['https://www.w3.org/ns/activitystreams#Public'],
+            cc: [`${config.apiUrl}/actors/${currentActor.username}/followers`]
+        })
         .then((res) => {
-            setDeleted(true);
+            setInvisible(true);
         })
         .catch(handleError)
         .finally(() => {
-            store.dispatch(removeLoadingReason(loadingReason))
-        })
+            store.dispatch(removeLoadingReason(loadingReason));
+        });
     }
 
-    const handleMore = () => {
-        // Show dropdown menu of more options
-    }
-
-    const handleShare = () => {
-        // Show options to share
-    }
-
-    const openProfile = () => {
-        // Open profile who made the note
-    }
 
     const processUsername = (url) => {
         if (!url) return undefined
@@ -97,7 +117,7 @@ const Note = (props) => {
         return parts[parts.length - 1]
     }
 
-    if(deleted === true) {
+    if (invisible === true) {
         return (
             <></>
         )
@@ -106,7 +126,7 @@ const Note = (props) => {
     return (
         <div className="vagabond-tile note" style={{ padding: '15px' }}>
             <div className="pfp-container">
-                <img onClick={openProfile}
+                <img
                     src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
                     width="100%"
                     height="auto"
@@ -116,22 +136,34 @@ const Note = (props) => {
             </div>
             <div className="content-container">
                 <div className="user-and-time">
-                    <div className="handle" onClick={openProfile}>{processUsername(props.note?.attributedTo)}</div>
+
+                    <div className="handle">{processUsername(props.note?.attributedTo)}</div>
+
                     <div className="time">{new Date(props.note?.published).toUTCString()}</div>
                 </div>
                 <div className="note-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.note?.content), style: { color: 'black' } }}>
                 </div>
                 <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
-                    <div style={style}>
-                        <Heart onClick={handleLike} className="note-icon" />
-                    </div>
+                    {
+                        props.like === undefined &&
+                        <div style={style}>
+                            <Heart onClick={handleLike} className="note-icon" />
+                        </div>
+                    }
+                    {
+                        props.like !== undefined &&
+                        <div style={style}>
+                            <ThumbsDown onClick={undoLike} className="note-icon"/>
+                        </div>
+                    }
+
                     <div style={style}>
                         <Link to="/reply" title="Comment" onClick={handleComment}>
                             <MessageSquare className="note-icon" />
                         </Link>
                     </div>
                     <div style={style}>
-                        <ArrowUpRight onClick={handleShare} className="note-icon" />
+                        <ArrowUpRight className="note-icon" />
                     </div>
                     {
                         props.note.attributedTo == `${config.apiUrl}/actors/${currentActor?.username}` &&
@@ -142,7 +174,7 @@ const Note = (props) => {
                 </div>
             </div>
             <div className="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
-                <MoreVertical onClick={handleMore} className="note-icon" style={{ width: '20px', height: '20px' }} />
+                <MoreVertical className="note-icon" style={{ width: '20px', height: '20px' }} />
             </div>
         </div>
     );
