@@ -1,56 +1,91 @@
-import React from 'react';
-import { useState, useEffect } from 'react';
 import { ReactComponent as Heart } from 'icon/heart.svg';
-import { ReactComponent as ThumbsDown } from 'icon/thumbs-down.svg';
 import { ReactComponent as MessageSquare } from 'icon/message-square.svg';
 import { ReactComponent as ArrowUpRight } from 'icon/arrow-up-right.svg';
 import { ReactComponent as MoreVertical } from 'icon/more-vertical.svg';
-import { updateReply } from 'reducer/reducer.js';
+import { ReactComponent as Trash2 } from 'icon/trash-2.svg';
+
+import React, { useState } from 'react';
+import { addLoadingReason, handleError, removeLoadingReason, updateReply } from 'reducer/reducer.js';
 import { store } from 'reducer/reducer.js';
 
 import { Link, useHistory } from 'react-router-dom';
 
-import sanitizeHtml from 'sanitize-html';
-import OrderedCollectionViewer from 'components/OrderedCollectionViewer';
+import axios from 'axios';
+import config from 'config/config.js';
 
+
+import sanitizeHtml from 'sanitize-html';
+
+/**
+* props.note: relevant note object
+ */
 const Note = (props) => {
 
-    const history = useHistory();
+    const [currentActor, setCurrentActor] = useState(store.getState().session.currentActor);
+    const [deleted, setDeleted] = useState(false);
+
+    store.subscribe(() =>{
+        setCurrentActor(store.getState().session.currentActor);
+    });
+
 
     const style = {
         fontSize: '13px'
     };
 
     const handleLike = () => {
-        console.log("Liked");
-        console.log(props.activity?.attributedTo);
-        // Like or remove like
+        const currentActor = store.getState().session.currentActor;
+        axios.post(`/api/v1/actors/${currentActor.username}/outbox`, {
+            ['@context']: 'https://www.w3.org/ns/activitystreams',
+            type: 'Like',
+            object: props.note,
+            to: ['https://www.w3.org/ns/activitystreams#Public'],
+            cc: [props.note.attributedTo, `${config.apiUrl}/actors/${currentActor.username}/followers`]
+        })
+            .then((res) => {
+
+            })
+            .catch(handleError)
     }
 
-    const handleDislike = () => {
-        console.log("Disliked")
+    const handleComment = () => {
+        store.dispatch(updateReply(props.note));
     }
 
-    const handleComment = () => { store.dispatch(updateReply(props.activity)) }
+    const handleDelete = () => {
+
+        const args = {
+            ['@context']: ['https://www.w3.org/ns/activitystreams'],
+            type: 'Delete',
+            object: props.note.id,
+            published: new Date().toISOString(),
+            to: ['https://www.w3.org/ns/activitystreams#Public'],
+            cc: [`${config.apiUrl}/actors/${currentActor.username}/followers`]
+        };
+
+        console.log(args);
+
+        const loadingReason = 'Deleting note'
+        store.dispatch(addLoadingReason(loadingReason))
+        axios.post(`/api/v1/actors/${currentActor.username}/outbox`, args)
+        .then((res) => {
+            setDeleted(true);
+        })
+        .catch(handleError)
+        .finally(() => {
+            store.dispatch(removeLoadingReason(loadingReason))
+        })
+    }
 
     const handleMore = () => {
-        console.log("More")
         // Show dropdown menu of more options
     }
 
     const handleShare = () => {
-        console.log("Share")
         // Show options to share
     }
 
-    const openNote = () => {
-        console.log("Open Note")
-        // Open tweet as the whole middle container
-        // Open the list of existing replies as well
-    }
-
     const openProfile = () => {
-        console.log("Open profile")
         // Open profile who made the note
     }
 
@@ -60,6 +95,12 @@ const Note = (props) => {
         if (url.charAt(length - 1) === '/') { url = url.substring(0, length - 1); }
         const parts = url.split('/');
         return parts[parts.length - 1]
+    }
+
+    if(deleted === true) {
+        return (
+            <></>
+        )
     }
 
     return (
@@ -75,29 +116,29 @@ const Note = (props) => {
             </div>
             <div className="content-container">
                 <div className="user-and-time">
-                    <div className="handle" onClick={openProfile}>{processUsername(props.activity?.actor)}</div>
-                    <div className="time">{new Date(props.activity?.published).toUTCString()}</div>
+                    <div className="handle" onClick={openProfile}>{processUsername(props.note?.attributedTo)}</div>
+                    <div className="time">{new Date(props.note?.published).toUTCString()}</div>
                 </div>
-                <div className="note-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.activity?.object.content), style: {color: 'black'} }}>
+                <div className="note-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.note?.content), style: { color: 'black' } }}>
                 </div>
                 <div className="icon-bar-horizontal" style={{ justifyContent: 'space-between' }}>
                     <div style={style}>
-                        <Heart onClick={handleLike} className="note-icon" />1234
-                </div>
-
-                    <div style={style}>
-                        <ThumbsDown onClick={handleDislike} className="note-icon" />1234
-                </div>
-
+                        <Heart onClick={handleLike} className="note-icon" />
+                    </div>
                     <div style={style}>
                         <Link to="/reply" title="Comment" onClick={handleComment}>
-                            <MessageSquare className="note-icon" />1234
-                    </Link>
+                            <MessageSquare className="note-icon" />
+                        </Link>
                     </div>
-
                     <div style={style}>
-                        <ArrowUpRight onClick={handleShare} className="note-icon" />1234
-                </div>
+                        <ArrowUpRight onClick={handleShare} className="note-icon" />
+                    </div>
+                    {
+                        props.note.attributedTo == `${config.apiUrl}/actors/${currentActor?.username}` &&
+                        <div style={style}>
+                            <Trash2 onClick={handleDelete} className="note-icon" />
+                        </div>
+                    }
                 </div>
             </div>
             <div className="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>

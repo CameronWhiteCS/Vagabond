@@ -194,6 +194,7 @@ def webfinger_federated():
 
 
         except Exception as e:
+            print(e)
             return error('An error occurred while attempting to look up the specified actor.')
 
 

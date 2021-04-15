@@ -1,8 +1,9 @@
-import OrderedCollectionViewer from 'components/OrderedCollectionViewer.js';
-import Note from 'components/notes/Note.js';
+import { useState } from 'react';
 
 import { store } from 'reducer/reducer.js';
-import { useState } from 'react';
+
+import OrderedCollectionViewer from 'components/OrderedCollectionViewer.js';
+import Note from 'components/notes/Note.js';
 
 const OutboxViewer = () => {
 
@@ -14,23 +15,19 @@ const OutboxViewer = () => {
 
     const render = (item) => {
         if (item.type === 'Create') {
-            return <Note activity={item} key={item.id} />
+            return <Note note={item.object} key={item.id} />
         }
     }
 
-
-        return (
-            <>
-                <h1>Outbox</h1>
-                {
-                    session.currentActor?.username !== undefined &&
-                    <OrderedCollectionViewer id={`/api/v1/actors/${session.currentActor.username}/outbox`} render={render}/>
-                }
-            </>
-        )
-    
-
-
+    return (
+        <>
+            <h1>Outbox</h1>
+            {
+                session.currentActor?.username !== undefined &&
+                <OrderedCollectionViewer id={`/api/v1/actors/${session.currentActor.username}/outbox`} render={render} />
+            }
+        </>
+    )
 
 }
 

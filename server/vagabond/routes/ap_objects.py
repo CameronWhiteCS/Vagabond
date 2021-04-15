@@ -73,13 +73,21 @@ def route_get_object_replies_by_id_paginated(object_id, page):
 
 
     # set variables
-    total_items = db.session.query(APObject).filter(APObject.in_reply_to_internal_id == ap_object.id).count()
+    max_id = None
+    if 'maxId' in request.args:
+        max_id = int(request.args['maxId'])
+
+    total_items = db.session.query(APObject).filter(APObject.in_reply_to_internal_id == ap_object.id)
+    if max_id is not None:
+        total_items = total_items.filter(APObject.id <= max_id)
+    total_items = total_items.count()
+
     api_url = config['api_url']
     items_per_page = 20
 
     base_query = db.session.query(APObject).filter(APObject.in_reply_to_internal_id == object_id)
 
-    if 'maxId' in request.args:
+    if max_id is not None:
         base_query = base_query.filter(APObject.id <= int(request.args['maxId']))
 
     items = base_query.order_by(APObject.id.desc()).paginate(page, items_per_page).items
@@ -118,18 +126,3 @@ def route_get_object_replies_by_id_paginated(object_id, page):
     output = make_response(output)
     output.headers['content-type'] = 'application/activity+json'
     return output
-
-
-    
-
-@app.route('/api/v1/feed')
-def route_feed():
-    notes = db.session.query(APObject).filter_by(type=APObjectType.NOTE).order_by(APObject.published.desc()).all()
-    output = []
-    for note in notes:
-        output.append({
-            'content': note.content,
-            'handle': '@username@domain',
-            'published': note.published
-        })
-    return make_response(jsonify(output), 200)

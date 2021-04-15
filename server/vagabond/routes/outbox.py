@@ -11,7 +11,8 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, APObject, APObjectType, Following, Activity, Create, Follow, FollowedBy, Like, Notification, Note, Undo
+
+from vagabond.models import Actor, APObject, APObjectType, Following, Activity, Create, Follow, FollowedBy, Like, Notification, Note, Undo, Delete
 from vagabond.routes import error, require_signin
 from vagabond.config import config
 from vagabond.crypto import signed_request
@@ -153,10 +154,6 @@ def outbox_permission_check(actor_name, user):
 
 
 
-def handle_in_reply_to():
-    pass
-
-
 
 def get_base_objects(obj):
     '''
@@ -166,7 +163,7 @@ def get_base_objects(obj):
 
         base_object is either a string or a database model depending on context
 
-        Returns: tuple(base_activity, base_object)
+        Returns: Flask.response | tuple(base_activity, base_object)
     '''
     base_activity = None
     base_object = None
@@ -184,10 +181,10 @@ def get_base_objects(obj):
         base_activity = Follow()
     elif obj['type'] == 'Like':
         base_activity = Like()
-        db.session.add(base_activity)
     elif obj['type'] == 'Undo':
         base_activity = Undo()
-        
+    elif obj['type'] == 'Delete':
+        base_activity = Delete()
     else:
         return error(err_not_supported)
 
@@ -287,6 +284,7 @@ def handle_follow(inbound_json, actor, base_activity, base_object, is_local):
         db.session.add(Notification(
             local_leader, f'{actor_dict["preferredUsername"]} has followed you.', 'Follow'))
         db.session.add(new_followed_by)
+        db.session.commit()
     else:
         db.session.commit()  # This is required so when we get an Accept activity back before the end of this request, we're able to find the Follow activity
         try:
@@ -295,6 +293,54 @@ def handle_follow(inbound_json, actor, base_activity, base_object, is_local):
             return error('Your follow request was not able to be delivered to that server.')
 
     return make_response('', 200)
+
+
+def handle_undo(inbound_json, actor):
+    '''
+        The Undo activity is one of a handful with side effects.
+        These include deleting Like objects and undoing leader-follower
+        relationships. These side effects are handled here.
+
+        Returns: None
+    '''
+    undone_activity = None
+    if isinstance(inbound_json['object'], str):
+        undone_activity = APObject.get_object_from_url(inbound_json['object'])
+    elif isinstance(inbound_json['object'], dict):
+        undone_activity = APObject.get_object_from_url(inbound_json['object']['id'])
+    
+    if undone_activity is None:
+        return error('Could not undo activity: activity not found.', 404)
+
+    if undone_activity.internal_actor_id != actor.id:
+        return error('You cannot undo activities performed by other actors.')
+
+
+    if isinstance(undone_activity, Follow):
+        pass
+    elif isinstance(undone_activity, Like):
+        db.session.delete(undone_activity)
+    else:
+        return error('You cannot undo that kind of activity.')
+
+
+def handle_delete(inbound_json, actor):
+
+    deleted_object = None
+    if isinstance(inbound_json['object'], str):
+        deleted_object = APObject.get_object_from_url(inbound_json['object'])
+    elif isinstance(inbound_json['object'], dict):
+        deleted_object = APObject.get_object_from_url(inbound_json['object']['id'])
+    
+    if deleted_object is None:
+        return error('Could not delete activity: activity not found.', 404)
+
+    if deleted_object.internal_author_id != actor.id:
+        return error('You cannot delete objects created by other actors.')
+
+    if isinstance(deleted_object, Note):
+        db.session.delete(deleted_object)
+
 
 @require_signin
 def post_outbox_c2s(actor_name, user=None):
@@ -308,15 +354,20 @@ def post_outbox_c2s(actor_name, user=None):
 
     is_local = determine_if_local(inbound_json)
 
-    (base_activity, base_object) = get_base_objects(inbound_json)
+    base_objects = get_base_objects(inbound_json)
+    if not isinstance(base_objects, tuple):
+        return base_objects
+
+    (base_activity, base_object) = base_objects
 
     base_activity.set_actor(actor)
 
     base_activity.set_object(base_object)
 
     # set the inReplyTo field
-    if isinstance(inbound_json['object'], dict) and 'inReplyTo' in inbound_json['object']:
+    if isinstance(base_object, db.Model) and isinstance(inbound_json['object'], dict) and 'inReplyTo' in inbound_json['object']:
         base_object.set_in_reply_to(inbound_json['object']['inReplyTo'])
+
 
     #set the to, bto, cc, and bcc fields
     base_activity.add_all_recipients(inbound_json)
@@ -328,7 +379,7 @@ def post_outbox_c2s(actor_name, user=None):
         for tag in inbound_json['tag']:
             base_activity.add_tag(tag)
     
-    if isinstance(inbound_json['object'], dict) and 'tag' in inbound_json['object'] and isinstance(inbound_json['object'], dict):
+    if isinstance(base_object, APObject) and isinstance(inbound_json['object'], dict) and 'tag' in inbound_json['object']:
         for tag in inbound_json['object']['tag']:
             base_object.add_tag(tag)
 
@@ -336,21 +387,51 @@ def post_outbox_c2s(actor_name, user=None):
     if inbound_json['type'] == 'Create':
         if inbound_json['object']['type'] == 'Note':
             base_object.attribute_to(actor)
-            base_object.content = inbound_json['object']['content']  
+
+            base_object.content = inbound_json['object']['content']
+    
     elif inbound_json['type'] == 'Follow':
         return handle_follow(inbound_json, actor, base_activity, base_object, is_local)
 
     elif inbound_json['type'] == 'Like':
-        liked_object = resolve_ap_object(inbound_json['object'])
-        if liked_object['type'] != 'Create' and liked_object['type'] != 'Note':
-            return error('You cannot like that kind of object.')
-    elif inbound_json['type'] == 'Undo':    
-        return error('Unfollow In progress')
-    
+
+        liked_object_url = None
+        if isinstance(inbound_json['object'], dict):
+            liked_object_url = inbound_json['object']['id']
+        else:
+            liked_object_url = inbound_json['object']
+        #We have to check if the count is > 1 because the Like object has already been flushed by the time these checks are being done.
+        existing_like_count = db.session.query(Like).filter(Like.external_object_id == liked_object_url).filter(Like.internal_actor_id == actor.id).count()
+        if existing_like_count > 1:
+            return error('You already like that object.')
+        else:
+            local_object = APObject.get_object_from_url(liked_object_url)
+            if local_object is not None:
+                existing_like_count = db.session.query(Like).filter(Like.internal_object_id == local_object.id).filter(Like.internal_actor_id == actor.id).count()
+                if existing_like_count > 1:
+                    return error('You already like that object.')
+
+    elif inbound_json['type'] == 'Delete':
+        err_response = handle_delete(inbound_json, actor)
+        if err_response is not None:
+            return err_response
+
+    # We have to generate the message delivery text because
+    # The delete activity disrupts the to_dict function
+    # by preventing the 'id' property of the dictionary
+    # from being generated. This confuses recieving servers.
+    delivery_message = base_activity.to_dict()
+
+    if inbound_json['type'] == 'Undo':
+        err_response = handle_undo(inbound_json, actor)
+        if err_response is not None:
+            return err_response
+
+    #finally, commit changes to database and then deliver the objects.
 
     db.session.commit()
 
-    deliver(actor, base_activity.to_dict())
+    deliver(actor, delivery_message)
 
     return make_response('', 201)
 
@@ -386,12 +467,15 @@ def route_user_outbox_paginated(actor_name, page):
     total_items = db.session.query(Activity).filter(Activity.internal_actor_id == actor.id).count()
     api_url = config['api_url']
     items_per_page = 20
+    max_id = None
+    if 'maxId' in request.args:
+        max_id = int(request.args['maxId'])
 
     # Create base query
     base_query = db.session.query(Activity).filter(
         Activity.internal_actor_id == actor.id)
 
-    if 'maxId' in request.args:
+    if max_id is not None:
         base_query = base_query.filter(Activity.id <= int(request.args['maxId']))
 
     base_query = base_query.order_by(Activity.published.desc()).paginate(page, 20)
@@ -412,24 +496,21 @@ def route_user_outbox_paginated(actor_name, page):
     }
 
     # Add optional maxId parameter
-    if 'maxId' in request.args:
-        max_id = int(request.args['maxId'])
+    if max_id is not None:
         output['id'] = output['id'] + f'?maxId={max_id}'
 
     # add optional 'prev' page
     if page > 1:
         prev = f'{api_url}/actors/{actor_name}/outbox/{page-1}'
-        if 'maxId' in request.args:
-            max_id = int(request.args['maxId'])
-            _next = _next + f'?maxId={max_id}'
+        if max_id is not None:
+            prev = prev + f'?maxId={max_id}'
         output['prev'] = prev
 
     # add optional 'next' page
     if total_items > items_per_page * page:
         _next = f'{api_url}/actors/{actor_name}/outbox/{page+1}'
-        if 'maxId' in request.args:
-            max_id = int(request.args['maxId'])
-            _next = _next + 'f?maxId={max_id}'
+        if max_id is not None:
+            _next = _next + f'?maxId={max_id}'
         output['next'] = _next
 
     output = make_response(output, 200)

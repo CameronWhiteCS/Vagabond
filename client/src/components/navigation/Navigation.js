@@ -1,5 +1,3 @@
-
-import { ReactComponent as Home } from 'icon/home.svg'
 import { ReactComponent as Users } from 'icon/users.svg'
 import { ReactComponent as SignIn } from 'icon/sign-in.svg'
 import { ReactComponent as SignOut } from 'icon/sign-out.svg'
@@ -76,8 +74,8 @@ const Navigation = () => {
                         <UserPlus onClick={toggleSearchBar} className="icon"/>
                     </Link>
                 }
-                <Link to="/"  title="Home">
-                    <Home className="icon"/>
+                <Link to="/"  title="Inbox">
+                    <Inbox className="icon"/>
                 </Link>
                 {
                     session.signedIn &&
