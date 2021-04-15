@@ -20,12 +20,12 @@ const SignIn = () => {
         store.dispatch(updateSignUp(false));
     }
 
-    useEffect(() => {
-        store.subscribe(() => {
-            setShow(store.getState().showSignIn);
-            setSignUp(store.getState().showSignUp);
-        })
-    }, []);
+
+    store.subscribe(() => {
+        setShow(store.getState().showSignIn);
+        setSignUp(store.getState().showSignUp);
+    })
+
 
     const initialValues = {
         username: '',
@@ -59,39 +59,39 @@ const SignIn = () => {
 
     return (
         <>
-        <Modal show={show}>
-            {
-                !signUp &&
-                <>
-                <Modal.Header>
-                    <Modal.Title>Sign In</Modal.Title>
-                    <button id="close" onClick={handleClose}>X</button>
-                </Modal.Header>
-                <Modal.Body>  
-                    <Form onSubmit={formik.handleSubmit}>
-                        <Form.Group>
-                            <Form.Label htmlFor="username">Username</Form.Label>
-                            <Form.Control name="username" id="username" onChange={formik.handleChange} />
-                        </Form.Group>
-                        <Form.Group>
-                            <Form.Label htmlFor="password">Password</Form.Label>
-                            <Form.Control type="password" name="password" id="password" onChange={formik.handleChange} />
-                        </Form.Group>
-                        <Form.Group className="button-area">
-                            <Button className="modal-button" variant="primary" type="submit" disabled={Object.keys(formik.errors).length > 0}>Sign in</Button>
-                            <Form.Text style={{marginTop:'5px'}}>Need an account? <b className="signup-toggler" onClick={() => store.dispatch(updateSignUp(true))}>Sign Up</b></Form.Text>
-                        </Form.Group>
-                    </Form>   
-                </Modal.Body>
-                </>
-            }
-            { 
-                signUp && <SignUp /> 
-            }
-            
-        </Modal>
-        
-        
+            <Modal show={show}>
+                {
+                    !signUp &&
+                    <>
+                        <Modal.Header>
+                            <Modal.Title>Sign In</Modal.Title>
+                            <button id="close" onClick={handleClose}>X</button>
+                        </Modal.Header>
+                        <Modal.Body>
+                            <Form onSubmit={formik.handleSubmit}>
+                                <Form.Group>
+                                    <Form.Label htmlFor="username">Username</Form.Label>
+                                    <Form.Control name="username" id="username" onChange={formik.handleChange} />
+                                </Form.Group>
+                                <Form.Group>
+                                    <Form.Label htmlFor="password">Password</Form.Label>
+                                    <Form.Control type="password" name="password" id="password" onChange={formik.handleChange} />
+                                </Form.Group>
+                                <Form.Group className="button-area">
+                                    <Button className="modal-button" variant="primary" type="submit" disabled={Object.keys(formik.errors).length > 0}>Sign in</Button>
+                                    <Form.Text style={{ marginTop: '5px' }}>Need an account? <b className="signup-toggler" onClick={() => store.dispatch(updateSignUp(true))}>Sign Up</b></Form.Text>
+                                </Form.Group>
+                            </Form>
+                        </Modal.Body>
+                    </>
+                }
+                {
+                    signUp && <SignUp />
+                }
+
+            </Modal>
+
+
         </>
     );
 

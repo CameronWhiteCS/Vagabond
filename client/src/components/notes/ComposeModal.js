@@ -1,72 +1,23 @@
-import axios from 'axios';
-import { useFormik } from 'formik';
-import * as Yup from 'yup';
-import { Form, Button, Modal } from 'react-bootstrap';
-import React, { useState, useEffect } from 'react';
-import { ReactComponent as PaperClip } from 'icon/paperclip.svg'
-import { ReactComponent as AlertTriangle } from 'icon/alert-triangle.svg'
-import { ReactComponent as Eye } from 'icon/eye.svg'
-import { ReactComponent as Archive } from 'icon/archive.svg'
-import { ReactComponent as Navigation } from 'icon/navigation.svg'
-import TextArea from 'components/vagabond/TextArea.js';
-import config from 'config/config.js';
-import { store, handleError, updateCompose, addLoadingReason, removeLoadingReason } from 'reducer/reducer.js';
+
+
+import React, { useState } from 'react';
+import { Modal } from 'react-bootstrap';
+
+import { store } from 'reducer/reducer.js';
+import ComposeNote from 'components/notes/ComposeNote';
 
 const ComposeModal = () => {
 
     const [show, setShow] = useState(store.getState().compose);
 
-    const handleClose = () => {
-        store.dispatch(updateCompose(false));
-    }
-
     store.subscribe(() => {
         setShow(store.getState().compose);
-    });
-
-
-    const initialValues = {
-        content: ''
-    }
-
-    const validationSchema = Yup.object().shape({
-        content: Yup.string().required('').max(1024, 'Notes cannot be more than 1024 characters.')
-    });
-
-    const onSubmit = (values) => {
-        const actorName = store.getState().session.currentActor.username;
-
-        const loadingReason = 'Composing note';
-        store.dispatch(addLoadingReason(loadingReason));
-        const args = {
-            type: 'Note',
-            content: `<p>${values.content}</p>`,
-            published: new Date().toISOString(),
-            to: ['https://www.w3.org/ns/activitystreams#Public'],
-            cc: [`${config.apiUrl}/actors/${actorName}/followers`]
-        };
-        args['@context'] = 'https://www.w3.org/ns/activitystreams';
-
-        axios.post(`/api/v1/actors/${actorName}/outbox`, args)
-            .then((res) => {
-                formik.resetForm(initialValues);
-            })
-            .catch(handleError)
-            .finally(() => {
-                store.dispatch(removeLoadingReason(loadingReason));
-                store.dispatch(updateCompose(false));
-            });
-    }
-
-    const formik = useFormik({
-        initialValues: initialValues,
-        validationSchema: validationSchema,
-        onSubmit: onSubmit
     });
 
     return (
         <>
             <Modal show={show}>
+<<<<<<< HEAD
                 <Modal.Body style={{ margin: '0', width: '100%', padding: '10px',display:'flex',flexDirection:'column' }}>
                     <Form id="compose-note-modal" onSubmit={formik.handleSubmit} style={{display:'flex',flexDirection:'column' }}>
                         <div className="compose-note vagabond-tile" style={{ width: '100%' }}>
@@ -102,6 +53,10 @@ const ComposeModal = () => {
                     </Form>
 
 
+=======
+                <Modal.Body style={{ margin: '0', width: '100%', padding: '10px', display: 'flex', flexDirection: 'column' }}>
+                    <ComposeNote />
+>>>>>>> upstream/master
                 </Modal.Body>
             </Modal>
         </>

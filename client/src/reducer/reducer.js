@@ -12,11 +12,10 @@ const initialState = {
     compose: false, // Modal for composing a note
     collections: {
         //Used for OrderedCollectionViewer
-        //['https://example.io']: {
-        //    nextPage: 1,
+        //['/api/v1/example/collection']: {
+        //    nextPage: /api/v1/example/collection/2,
         //    totalItems: undefined,
-        //    items: [],
-        //    maxId: 1337
+        //    items: []
         //}
     },
     reply: undefined,
@@ -61,6 +60,12 @@ const reducer = (state = initialState, action) => {
         const newCollections = { ...state.collections };
         newCollections[action.id] = action.collection;
         return { ...state, collections: newCollections };
+    } else if (action.type === 'REMOVE_COLLECTION') {
+        let newState = { ...state };
+        delete newState.collections[action.id];
+        return newState;
+    } else if (action.type === 'RESET') {
+        return initialState;
     } else {
         return state;
     }
@@ -74,7 +79,7 @@ store.getState();
  * @param {*} show Whether or not the compose modal is visible
  * @returns void
  */
- const updateCompose = (compose) => {
+const updateCompose = (compose) => {
 
     return {
         type: 'UPDATE_COMPOSE',

@@ -10,7 +10,7 @@ class Notification(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
 
-    actor_id = db.Column(db.Integer, db.ForeignKey('actor.id'))
+    actor_id = db.Column(db.Integer, db.ForeignKey('ap_object.id'))
     content = db.Column(db.String(256), nullable=False)
     date = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
     type = db.Column(db.String(16), nullable=False)

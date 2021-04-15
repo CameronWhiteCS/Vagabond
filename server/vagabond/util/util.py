@@ -1,8 +1,13 @@
+'''
+    Collectin of Vagabond utility functions.
+'''
+
 import requests
+
+from vagabond.config import config
 
 from bs4 import BeautifulSoup
 from datetime import datetime
-
 
 
 def resolve_ap_object(url, iteration=0, original_url = None):
@@ -83,16 +88,3 @@ def xsd_datetime(day=None):
     xsd = '%Y-%m-%dT%H:%M:%SZ'
     return day.strftime(xsd)
 
-
-
-def query_webfinger(username, hostname):
-    '''
-        Queries webfinger about the provided username on a remote server
-        
-        Returns: Dictionary, None
-    '''
-    response = requests.get(f'https://{hostname}/.well-known/webfinger?resource=acct:{username}@{hostname}')
-    try:
-        return response.json()
-    except:
-        return None

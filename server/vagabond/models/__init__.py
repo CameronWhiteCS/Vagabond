@@ -1,7 +1,7 @@
 from .APObjectType import APObjectType
-from .APObject import APObject, APObjectAttributedTo, APObjectRecipient
+from .APObject import APObjectRecipient, APObjectAttributedTo, APObjectTag, APObject
 from .Activity import Activity
-from .Following import Following 
+from .Following import Following
 from .User import User
 from .Actor import Actor
 from .Note import Note

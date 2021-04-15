@@ -1,6 +1,7 @@
 '''
     Contains routes and functions for processing
-    inbound requests to an actor outbox.
+    inbound requests to an actor outbox and for displaying
+    the contents of an Actor outbox.
 '''
 
 from math import ceil
@@ -10,7 +11,7 @@ from flask import make_response, request, session
 from dateutil.parser import parse
 
 from vagabond.__main__ import app, db
-from vagabond.models import Actor, APObjectAttributedTo, APObject, APObjectType, Following, Note, Activity, Create, Follow, FollowedBy, Like, Notification
+from vagabond.models import Actor, APObject, APObjectType, Following, Activity, Create, Follow, FollowedBy, Like, Notification, Note
 from vagabond.routes import error, require_signin
 from vagabond.config import config
 from vagabond.crypto import signed_request
@@ -18,133 +19,336 @@ from vagabond.util import resolve_ap_object
 
 import json
 
+'''
+    -=-=-=-=-=-=-=-=-=-=
+      HELPER FUNCTIONS
+    -=-=-=-=-=-=-=-=-=-=
+'''
+
 def deliver(actor, message):
     '''
-        Delivers the specified message to the inboxes of the actor's followers
+        Delivers the specified message to the recipients listed in the to, bto, cc, and bcc fields. 
     '''
-    
+
+    api_url = config['api_url']
+
+    keys = ['to', 'bto', 'cc', 'bcc']
+    recipients = []
+    for key in keys:
+        if key in message:
+            if isinstance(message[key], str):
+                message[key] = [message[key]]
+            for value in message[key]:
+                recipients.append(value)
+
     all_inboxes = []
 
-    shared_inboxes = db.session.query(FollowedBy.follower_shared_inbox.distinct()).filter(FollowedBy.leader_id == actor.id, FollowedBy.follower_shared_inbox != None).all()
-    print(shared_inboxes)
-    for inbox in shared_inboxes:
-        all_inboxes.append(inbox[0])
+    for recipient in recipients:
+        try:
+            # possibility 1: local delivery of some kind. If delivery is to local actor, do nothing. If delivery is to local followers collection, distribute to followers.
+            if recipient.replace(f'{api_url}/actors/', '') != recipient:
+                splits = recipient.replace(f'{api_url}/actors/', '').split('/')
 
-    unique_inboxes = db.session.query(FollowedBy.follower_inbox.distinct()).filter(FollowedBy.leader_id == actor.id, FollowedBy.follower_shared_inbox == None).all()
-    for inbox in unique_inboxes:
-        all_inboxes.append(inbox[0])
+                if len(splits) == 2 and splits[1] == 'followers':
+                    leader = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(splits[0])).first()
+                    if leader is None:
+                        continue
 
+                    shared_inboxes = db.session.query(FollowedBy.follower_shared_inbox.distinct()).filter(FollowedBy.leader_id == leader.id, FollowedBy.follower_shared_inbox != None).all()
+                    for inbox in shared_inboxes:
+                        all_inboxes.append(inbox[0])
+
+                    unique_inboxes = db.session.query(FollowedBy.follower_inbox.distinct()).filter(FollowedBy.leader_id == leader.id, FollowedBy.follower_shared_inbox == None).all()
+                    for inbox in unique_inboxes:
+                        all_inboxes.append(inbox[0])
+            
+            # possibility 2: external delivery of some kind
+            else:
+
+                actor_types = ['Application', 'Group', 'Organization', 'Person', 'Service']
+
+                recipient_object = resolve_ap_object(recipient)
+
+                if recipient_object is None:
+                    continue
+
+                if recipient_object['type'] in actor_types:
+
+                    if 'endpoints' in recipient_object and 'sharedInbox' in recipient_object['endpoints'] and recipient_object['endpoints']['sharedInbox'] not in all_inboxes:
+                        all_inboxes.append(recipient_object['endpoints']['sharedInbox'])
+                    elif 'inbox' in recipient_object:
+                        all_inboxes.append(recipient_object['inbox'])  
+
+                elif (recipient_object['type'] == 'OrderedCollection' or recipient_object['type'] == 'Collection'):
+                    
+                    # We have a page with the items all in one place
+                    if 'items' in recipient_object:
+                        for item in recipient_object['items']:
+                            if isinstance(item, str):
+                                if item not in all_inboxes:
+                                    all_inboxes.append(item)
+                            elif isinstance(item, dict):
+                                if 'endpoints' in item and 'sharedInbox' in item['endpoints']:
+                                    shared_inbox = item['endpoints']['sharedInbox']
+                                    if shared_inbox not in all_inboxes:
+                                        all_inboxes.append(shared_inbox)
+                                elif 'inbox' in item:
+                                    if item['inbox'] not in all_inboxes:
+                                        all_inboxes.append(item['inbox'])
+                                        
+                    # Traditional segmented OrderedCollection
+                    else:
+
+                        next_page = resolve_ap_object(recipient_object['first'])
+                        iteration = 0
+
+                        while next_page is not None and iteration < 10:
+
+                            for item in next_page['items']:
+                                if isinstance(item, str) and item not in all_inboxes:
+                                    all_inboxes.append(item)
+                                elif isinstance(item, dict) and 'id' in item and 'type' in item and item['type'] in actor_types:
+                                    all_inboxes.append(item)
+
+                            iteration = iteration + 1
+                            if 'next' in next_page:
+                                next_page = resolve_ap_object(next_page['next'])
+                            else:
+                                next_page = None
+
+
+                    #TODO: Delivery to external collections
+
+        except Exception as e:
+            print(e)
+            
     for inbox in all_inboxes:
-        if inbox.replace(config['api_url'], '') == inbox: #Don't deliver messages to ourselves!
+        # Don't deliver messages to ourselves!
+        if inbox.replace(config['api_url'], '') == inbox:
             try:
                 signed_request(actor, message, url=inbox)
-            except:
+            except Exception as e:
+                print(e)
+                print( f'Could not deliver message to the following inbox: {inbox}')
+
                 app.logger.error(f'Could not deliver message to the following inbox: {inbox}')
 
 
-# TODO: Cerberus validation
-@require_signin
-def post_outbox_c2s(actor_name, user=None):
 
-    # Make sure the user has permission to post to this outbox
-    is_own_outbox = False
+def outbox_permission_check(actor_name, user):
+    '''
+        Checks if the user has permission
+        to POST to the URL of the actor's outbox.
+
+        Returns an actor object if the user has permission,
+        None otherwise.
+    '''
     actor = None
     for _actor in user.actors:
         if _actor.username.lower() == actor_name.lower():
-            is_own_outbox = True
             actor = _actor
             break
 
-    if not is_own_outbox:
-        return error('You can\'t post to the outbox of an actor that isn\'t yours.')
+    return actor
 
-    inbound_object = request.get_json()
 
-    is_local = False # Whether or not the object being acted upon is an object that **originated** on this server
-    if 'object' in inbound_object and inbound_object['object'].replace(config['api_url'], '') != inbound_object['object']:
-        is_local = True
 
-    # Create activity and possibly the object, set polymorphic type, and flush to DB
-    base_activity = None # base_activity always exists
-    base_object = None # base_object sometimes exists
+def handle_in_reply_to():
+    pass
 
-    if inbound_object['type'] == 'Note':
-        base_object = Note()
-        base_activity = Create()
-        db.session.add(base_object)
-        db.session.add(base_activity)
-    elif inbound_object['type'] == 'Follow':
+
+
+def get_base_objects(obj):
+    '''
+        The client is capable of sending a wide array of object types to
+        the server. This function parses the input AP Activity+Object pair and
+        returns a tuple containing the correct database model(s).
+
+        base_object is either a string or a database model depending on context
+
+        Returns: tuple(base_activity, base_object)
+    '''
+    base_activity = None
+    base_object = None
+
+    err_not_supported = 'Vagabond does not currently support this type of AcvtivityPub object.'
+
+    if obj['type'] == 'Create':
+        if obj['object']['type'] == 'Note':
+            base_object = Note()
+            base_activity = Create()
+        else:
+            return error(err_not_supported)
+
+    elif obj['type'] == 'Follow':
         base_activity = Follow()
-        db.session.add(base_activity)
-    elif inbound_object['type'] == 'Like':
+    elif obj['type'] == 'Like':
         base_activity = Like()
-        db.session.add(base_activity)
     else:
-        return error('Vagabond does not currently support this type of AcvtivityPub object.')
+        return error(err_not_supported)
 
+    if base_object is None:
+        if(isinstance(obj['object'], str)):
+            base_object = obj['object']
+        elif(isinstance(obj['object'], dict)):
+            base_object = obj['object']['id']
+        else:
+            raise Exception('Invalid Activity: object field was neither an object nor a string.')
+
+    db.session.add(base_activity)
+    if isinstance(base_object, db.Model):
+        db.session.add(base_object)
     db.session.flush()
 
-    # Set actor ---> activity relationship
-    base_activity.set_actor(actor)
+    return (base_activity, base_object)
 
-    # Set activity ----> object relationship
-    if base_object is None:
-        base_activity.set_object(inbound_object['object'])
+
+
+def wrap_raw_object(obj):
+    '''
+        The ActivityPub specificiation allows the client to send raw objects to the
+        server without being wrapped by an activity. When this happens, the server
+        understands this to be shorthand for a Create activity on the incoming object.
+
+        Function currently only works with Note objects, though other types are
+        supported by the specification.
+    '''
+
+    if obj['type'] != 'Note':
+        return obj
     else:
-        base_activity.set_object(base_object)
+        output = {
+            'type': 'Create',
+            'object': obj
+        }
+        copy_keys = ['to', 'bto', 'cc', 'bcc', 'published', 'context']
+        for key in copy_keys:
+            if key in obj:
+                output[key] = obj[key]
 
-    # Handle requirements for specific object types
-    if inbound_object['type'] == 'Note':
-        base_activity.add_all_recipients(inbound_object)
-        base_object.add_all_recipients(inbound_object)
-        base_object.attribute_to(actor)
-        base_object.content = inbound_object['content']
-    elif inbound_object['type'] == 'Follow':
-        leader = resolve_ap_object(inbound_object['object'])
+        return output
 
-        existing_follow = db.session.query(Following).filter(db.and_(
-            Following.follower_id == actor.id,
-            Following.leader == leader['id']
-        )).first()
 
-        if existing_follow is not None and existing_follow.approved is True:
-            return error('You are already following this actor.')
 
-        new_follow = Following(actor.id, leader['id'], leader['followers'], approved=is_local)
-        db.session.add(new_follow)
+def determine_if_local(activity):
+    '''
+        Returns true if the Activity sent by the client is acting on an object
+        that originated on this server. Used mainly for the special
+        handling of the Follow activity. Returns false otherwise.
+    '''
+    api_url = config['api_url']
+    output = False
+    if 'object' in activity:
+        if isinstance(activity['object'], dict) and 'id' in activity['object']:
+            _id = activity['object']['id']
+            if _id.replace(api_url, '') != _id:
+                output = True
+        elif isinstance(activity['object'], str):
+            _id = activity['object']
+            if _id.replace(api_url, '') != _id:
+                output = True
+
+    return output
+
+def handle_follow(inbound_json, actor, base_activity, base_object, is_local):
+    '''
+        Handles the various oddities associated with the correspondance nature of the Follow activity.
+    '''
+    leader = resolve_ap_object(inbound_json['object'])
+
+    existing_follow = db.session.query(Following).filter(db.and_(
+        Following.follower_id == actor.id,
+        Following.leader == leader['id']
+    )).first()
+
+    if existing_follow is not None and existing_follow.approved is True:
+        return error('You are already following this actor.')
+
+    new_follow = Following(
+        actor.id, leader['id'], leader['followers'], approved=is_local)
+    db.session.add(new_follow)
 
         # Due to the correspondance nature of the Follow activity, it has some very unusual requirements.
         # We need to detect if the incoming Follow activity is targeting a local user. If it is, we don't need
         # To deliver server-to-server messages about this transaction. Attempting to do so would cause problems
         # resulting from uncomitted database transactions and be a waste of resources.
-        if is_local:
-            local_leader = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(inbound_object['object'].replace(f'{config["api_url"]}/actors/', ''))).first()
-            if local_leader is None:
-                return make_response('Actor not found', 404)
-            actor_dict = actor.to_dict()
-            new_followed_by = FollowedBy(local_leader.id, actor_dict['id'], actor_dict['inbox'], follower_shared_inbox=actor_dict['endpoints']['sharedInbox'], approved=True)
-            db.session.add(Notification(local_leader, f'{actor_dict["preferredUsername"]} has followed you.', 'Follow'))
-            db.session.add(new_followed_by)
-        else:
-            db.session.commit() #This is required so when we get an Accept activity back before the end of this request, we're able to find the Follow activity
-            try:
-                signed_request(actor, base_activity.to_dict(), leader['inbox'])
-            except:
-                return error('Your follow request was not able to be delivered to that server.')
+    if is_local:
+        local_leader = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(
+            inbound_json['object'].replace(f'{config["api_url"]}/actors/', ''))).first()
+        if local_leader is None:
+            return make_response('Actor not found', 404)
+        actor_dict = actor.to_dict()
+        new_followed_by = FollowedBy(
+            local_leader.id, actor_dict['id'], actor_dict['inbox'], follower_shared_inbox=actor_dict['endpoints']['sharedInbox'], approved=True)
+        db.session.add(Notification(
+            local_leader, f'{actor_dict["preferredUsername"]} has followed you.', 'Follow'))
+        db.session.add(new_followed_by)
+    else:
+        db.session.commit()  # This is required so when we get an Accept activity back before the end of this request, we're able to find the Follow activity
+        try:
+            signed_request(actor, base_activity.to_dict(), leader['inbox'])
+        except:
+            return error('Your follow request was not able to be delivered to that server.')
 
-    elif inbound_object['type'] == 'Like':
-        liked_object = resolve_ap_object(inbound_object['object'])
+    return make_response('', 200)
 
-        if liked_object['type'] == 'Create' or liked_object['type'] == 'Note':
-            base_activity.set_object(inbound_object['object'])
-        else:
-            return error('You cannot like that kind of object.')
+@require_signin
+def post_outbox_c2s(actor_name, user=None):
+
+    # Verify that user has permission to POST to this outbox
+    actor = outbox_permission_check(actor_name, user)
+    if actor is None:
+        return error('You can\'t post to the outbox of an actor that isn\'t yours.')
+
+    inbound_json = wrap_raw_object(request.get_json())
+
+    is_local = determine_if_local(inbound_json)
+
+    (base_activity, base_object) = get_base_objects(inbound_json)
+
+    base_activity.set_actor(actor)
+
+    base_activity.set_object(base_object)
+
+    # set the inReplyTo field
+    if isinstance(inbound_json['object'], dict) and 'inReplyTo' in inbound_json['object']:
+        base_object.set_in_reply_to(inbound_json['object']['inReplyTo'])
+
+    #set the to, bto, cc, and bcc fields
+    base_activity.add_all_recipients(inbound_json)
+    if isinstance(base_object, db.Model):
+        base_object.add_all_recipients(inbound_json['object'])
+
+    # tags
+    if 'tag' in inbound_json and isinstance(inbound_json['tag'], list):
+        for tag in inbound_json['tag']:
+            base_activity.add_tag(tag)
+    
+    if isinstance(inbound_json['object'], dict) and 'tag' in inbound_json['object'] and isinstance(inbound_json['object'], dict):
+        for tag in inbound_json['object']['tag']:
+            base_object.add_tag(tag)
+
+    # Handle requirements for specific object types
+    if inbound_json['type'] == 'Create':
+        if inbound_json['object']['type'] == 'Note':
+            base_object.attribute_to(actor)
+            base_object.content = inbound_json['object']['content']
+
         
-    deliver(actor, base_activity.to_dict())
+    elif inbound_json['type'] == 'Follow':
+        return handle_follow(inbound_json, actor, base_activity, base_object, is_local)
+
+    elif inbound_json['type'] == 'Like':
+        liked_object = resolve_ap_object(inbound_json['object'])
+        if liked_object['type'] != 'Create' and liked_object['type'] != 'Note':
+            return error('You cannot like that kind of object.')
 
     db.session.commit()
 
+    deliver(actor, base_activity.to_dict())
+
     return make_response('', 201)
+
 
 
 @app.route('/api/v1/actors/<actor_name>/outbox', methods=['GET', 'POST'])
@@ -162,16 +366,26 @@ def route_user_outbox(actor_name):
         return error('Invalid request')
 
 
+
 @app.route('/api/v1/actors/<actor_name>/outbox/<int:page>')
 def route_user_outbox_paginated(actor_name, page):
 
-    actor = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(actor_name)).first()
+    # Make sure actor exists
+    actor = db.session.query(Actor).filter(db.func.lower(
+        Actor.username) == db.func.lower(actor_name)).first()
 
     if actor is None:
         return error('Actor not found', 404)
 
-    base_query = db.session.query(Activity).filter(Activity.actor == actor)
-    
+    # Variables
+    total_items = db.session.query(Activity).filter(Activity.internal_actor_id == actor.id).count()
+    api_url = config['api_url']
+    items_per_page = 20
+
+    # Create base query
+    base_query = db.session.query(Activity).filter(
+        Activity.internal_actor_id == actor.id)
+
     if 'maxId' in request.args:
         base_query = base_query.filter(Activity.id <= int(request.args['maxId']))
 
@@ -179,37 +393,48 @@ def route_user_outbox_paginated(actor_name, page):
 
     activities = base_query.items
 
-    api_url = config['api_url']
-
     ordered_items = []
 
     for activity in activities:
         ordered_items.append(activity.to_dict())
-
-    prev = f'{api_url}/actors/{actor_name}/outbox/{page-1}'
-    _next =  f'{api_url}/actors/{actor_name}/outbox/{page+1}'
-
-    if 'maxId' in request.args:
-        max_id = int(request.args['maxId'])
-        prev = prev + f'?maxId={max_id}'
-        _next = _next + f'?maxId={max_id}'
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
         'id': f'{api_url}/actors/{actor_name}/outbox/{page}',
         'partOf': f'{api_url}/actors/{actor_name}/outbox',
         'type': 'OrderedCollectionPage',
-        'prev': prev,
-        'next': _next,
         'orderedItems': ordered_items
     }
 
-    response = make_response(output, 200)
-    response.headers['Content-Type'] = 'application/activity+json'
-    return response
+    # Add optional maxId parameter
+    if 'maxId' in request.args:
+        max_id = int(request.args['maxId'])
+        output['id'] = output['id'] + f'?maxId={max_id}'
+
+    # add optional 'prev' page
+    if page > 1:
+        prev = f'{api_url}/actors/{actor_name}/outbox/{page-1}'
+        if 'maxId' in request.args:
+            max_id = int(request.args['maxId'])
+            _next = _next + f'?maxId={max_id}'
+        output['prev'] = prev
+
+    # add optional 'next' page
+    if total_items > items_per_page * page:
+        _next = f'{api_url}/actors/{actor_name}/outbox/{page+1}'
+        if 'maxId' in request.args:
+            max_id = int(request.args['maxId'])
+            _next = _next + 'f?maxId={max_id}'
+        output['next'] = _next
+
+    output = make_response(output, 200)
+    output.headers['Content-Type'] = 'application/activity+json'
+    return output
+
+
 
 def get_outbox(username):
-    
+
     username = username.lower()
 
     actor = db.session.query(Actor).filter_by(username=username).first()
@@ -217,9 +442,10 @@ def get_outbox(username):
         return error('Actor not found', 404)
 
     items_per_page = 20
-    total_items = db.session.query(Activity).filter(Activity.actor == actor).count()
+    total_items = db.session.query(Activity).filter(Activity.internal_actor_id == actor.id).count()
 
-    max_id_object = db.session.query(Activity).filter(Activity.actor == actor).order_by(Activity.id.desc()).first()
+    max_id_object = db.session.query(Activity).filter(
+        Activity.internal_actor_id == actor.id).order_by(Activity.id.desc()).first()
     max_id = 0
     if max_id_object is not None:
         max_id = max_id_object.id

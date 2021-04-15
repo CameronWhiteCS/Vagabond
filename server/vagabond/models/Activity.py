@@ -3,19 +3,17 @@ from vagabond.models import APObject, APObjectType, Actor
 from vagabond.config import config
 
 class Activity(APObject):
-    id = db.Column(db.Integer, db.ForeignKey('ap_object.id'), primary_key=True)
 
     internal_object_id = db.Column(db.ForeignKey('ap_object.id'))
     external_object_id = db.Column(db.String(1024))
-    internal_actor_id = db.Column(db.ForeignKey('actor.id'))
+    internal_actor_id = db.Column(db.ForeignKey('ap_object.id'))
     external_actor_id = db.Column(db.String(1024))
     
-    actor = db.relationship('Actor', foreign_keys=[internal_actor_id]) #Person performing the activity
-    object = db.relationship('APObject', foreign_keys=internal_object_id, uselist=False)
+    #actor = db.relationship('APObject', foreign_keys=[internal_actor_id]) #Person performing the activity
+    #object = db.relationship('APObject', foreign_keys=[internal_object_id], uselist=False)
 
     __mapper_args__ = {
-        'polymorphic_identity': APObjectType.ACTIVITY,
-        'inherit_condition': id == APObject.id
+        'polymorphic_identity': APObjectType.ACTIVITY
     }
 
 
@@ -54,15 +52,15 @@ class Activity(APObject):
     def to_dict(self):
         output = super().to_dict()
 
-        if self.object is not None:
-            output['object'] = self.object.to_dict()
+        if self.internal_object_id is not None:
+            output['object'] = db.session.query(APObject).get(self.internal_object_id).to_dict()
         elif self.external_object_id is not None:
             output['object'] = self.external_object_id
         else:
             raise Exception('Activites must have an internal or external object.')
 
         if self.internal_actor_id is not None:
-            output['actor'] = f'{config["api_url"]}/actors/{self.actor.username}'
+            output['actor'] = db.session.query(APObject).get(self.internal_actor_id).to_dict()['id']
         elif self.external_actor_id is not None:
             output['actor'] = self.external_actor_id
         else:

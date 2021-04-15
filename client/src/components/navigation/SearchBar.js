@@ -1,4 +1,4 @@
-import { initialState, store, handleError, updateSignIn,  addLoadingReason, removeLoadingReason } from '../../reducer/reducer.js';
+import { initialState, store, handleError, updateSignIn, addLoadingReason, removeLoadingReason } from '../../reducer/reducer.js';
 import { useState, useEffect } from 'react';
 import { Link, useHistory } from 'react-router-dom';
 import { Form, Button } from 'react-bootstrap';
@@ -8,55 +8,56 @@ import axios from 'axios';
 const SearchBar = () => {
 
     const [session, setSession] = useState(initialState.session);
-    let input = "";
-    let username = "";
-    let hostname = "";
     const [currentActor, setCurrentActor] = useState(store.getState().session.currentActor);
+    const [handle, setHandle] = useState('');
 
     store.subscribe(() => {
         setCurrentActor(store.getState().session.currentActor);
     })
 
-    const processWebfingerResponse = (res) => {
-        let foreignActor = undefined;
-        res.data.links.every((link) => {
-            if (link.rel === 'self') {
-                foreignActor = link.href;
-                return false;
-            }
-            return true;
-        });
-        if (foreignActor !== undefined) {
-            const params = {
-                type: 'Follow',
-                actor: currentActor.id,
-                object: foreignActor
-            }
-            params['@context'] = 'https://www.w3.org/ns/activitystreams';
-
-            axios.post(`/api/v1/actors/${currentActor.username}/outbox`, params)
-                .then((res) => {
-                    console.log(res)
-                })
-                .catch(handleError);
+    const parseHandle = (input) => {
+        if (input.charAt(0) === '@') {
+            input = input.substring(1, input.length);
         }
+        const parts = input.split('@');
+        const username = parts[0]
+        const hostname = parts[1]
+        return [username, hostname]
     }
 
-    const processInput= () => {
-        let length = input.length;
-        if(input.charAt(0) === '@') { input = input.substring(1, length); } 
-        const parts = input.split('@');
-        username = parts[0]
-        hostname = parts[1]
+    const processProxyResponse = (res) => {
+
+        if (res.data !== undefined) {
+
+            const params = {
+                ['@context']: 'https://www.w3.org/ns/activitystreams',
+                type: 'Follow',
+                actor: currentActor.id,
+                object: res.data.id
+            }
+
+            const loadingReason = `Sending follow request to ${res.data?.preferredUsername}`;
+            store.dispatch(addLoadingReason(loadingReason));
+            axios.post(`/api/v1/actors/${currentActor.username}/outbox`, params)
+                .then((res) => {
+                    console.log(res.data);
+                })
+                .catch(handleError)
+                .finally(() => {
+                    store.dispatch(removeLoadingReason(loadingReason));
+                });
+        } else {
+
+        }
     }
 
     const onSubmit = (e) => {
         e.preventDefault();
         const loadingReason = 'Looking up user';
         store.dispatch(addLoadingReason(loadingReason));
-        processInput();
-        axios.get(`/api/v1/webfinger?username=${username}&hostname=${hostname}`)
-            .then(processWebfingerResponse)
+        const [username, hostname] = parseHandle(handle);
+        axios.get(`/api/v1/proxy?type=actor&username=${username}&hostname=${hostname}`)
+            .then(processProxyResponse)
             .catch(handleError)
             .finally(() => {
                 store.dispatch(removeLoadingReason(loadingReason));
@@ -65,13 +66,14 @@ const SearchBar = () => {
 
     return (
         <Form className="input-part" onSubmit={onSubmit}>
-                <Form.Control name="user"
-                        id="user"
-                        placeholder="e.g. user@mastodon.online"
-                        onChange={(e) => input = e.target.value}>
-                </Form.Control>
-                <Button type="submit" id="search-button">Follow</Button>
-        </Form> 
+            <Form.Control
+                id="user-search"
+                placeholder="e.g. user@mastodon.online"
+                onChange={(e) => setHandle(e.target.value)}
+                style={{ boxShadow: '0', border: '0' }}
+            />
+            <Button type="submit" id="search-button">Follow</Button>
+        </Form>
     );
 
 }
