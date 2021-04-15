@@ -2,5 +2,4 @@
 *.eslintcache
 server/vagabond/static/*
 .vscode/*
-server/wsgi.py
 client/package-lock.json
