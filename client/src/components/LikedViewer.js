@@ -17,6 +17,7 @@ const LikedViewer = () => {
     const render = (item) => {
         if(item.object?.id !== undefined && item.object?.type == 'Note') {
             return <Note note={item.object} like={item} key={item.id} />
+
         }
     }
 

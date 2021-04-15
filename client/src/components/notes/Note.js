@@ -136,7 +136,9 @@ const Note = (props) => {
             </div>
             <div className="content-container">
                 <div className="user-and-time">
+
                     <div className="handle">{processUsername(props.note?.attributedTo)}</div>
+
                     <div className="time">{new Date(props.note?.published).toUTCString()}</div>
                 </div>
                 <div className="note-content" dangerouslySetInnerHTML={{ __html: sanitizeHtml(props.note?.content), style: { color: 'black' } }}>
