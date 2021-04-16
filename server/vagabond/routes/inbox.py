@@ -8,7 +8,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject, Like, Delete
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject, Like, Delete, Undo
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse as parse_date
@@ -208,7 +208,26 @@ def new_ob_object(inbound_json, activity, obj):
             deleted_object.content = 'Message erased.'
         else:
             return error('Cannot delete object: object not found', 404)
+    elif activity['type'] == 'Undo':
+        '''
+        Currently just removes entries from the followed_by table since
+        that is that table is seperate from the AP_object table and activity table
+        '''
+        base_activity = Undo()
+        api_url = config['api_url']
+        app.logger.error('\n\n\n\n\n\n\nUndo Request was revieved')
 
+        undo_object = resolve_ap_object(obj)
+
+        if undo_object['type'] == 'Follow':
+            local_actor = resolve_ap_object(undo_object['object'])
+            local_actor_name = local_actor['id'].replace(f'{api_url}/actors/', '')
+            ex_leader = db.session.query(Actor.id).filter(Actor.username == local_actor_name)
+            to_be_deleted = db.session.query(FollowedBy).filter(db.and_(FollowedBy.leader_id == ex_leader, FollowedBy.follower == undo_object['actor']))
+            to_be_deleted.delete(synchronize_session=False)
+            db.session.commit()
+        else: 
+            return error ('Cannot undo this type of activity', 400)
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           
