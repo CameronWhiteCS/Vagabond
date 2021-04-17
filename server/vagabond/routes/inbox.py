@@ -147,7 +147,29 @@ def handle_tags(base_activity, base_object, activity, obj):
         HELPER FUNCTIONS - OTHER
     =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 '''
+def handle_undo(inbound_json, activity, obj):
+    print(json.dumps(inbound_json))
+    if obj['type'] == 'Follow':
 
+        leader = APObject.get_object_from_url(obj['object'])
+        if leader is None or not isinstance(leader, Actor):
+            return error('Actor not found.', 404)
+
+        follow_activity = db.session.query(Follow).filter(Follow.external_id == obj['id']).first()
+        if follow_activity is None:
+            return error('Cannot undo follow activity: follow not found.', 404)
+
+        followed_by = db.session.query(FollowedBy).filter(FollowedBy.follower == inbound_json['actor']).filter(FollowedBy.leader_id == leader.id).first()
+        if followed_by is None:
+            return error('Cannot undo follow activity: follow not found.', 404)
+
+        db.session.delete(follow_activity)
+        db.session.delete(followed_by)
+        db.session.commit()
+
+        return make_response('', 200)
+        
+        
 
 def new_ob_object(inbound_json, activity, obj):
     '''
@@ -205,9 +227,14 @@ def new_ob_object(inbound_json, activity, obj):
 
         deleted_object = db.session.query(APObject).filter(APObject.external_id == deleted_object_external_id).first()
         if deleted_object is not None:
-            deleted_object.content = 'Message erased.'
+            deleted_object.content = 'Message erased'
+
         else:
             return error('Cannot delete object: object not found', 404)
+
+    elif activity['type'] == 'Undo':
+        return handle_undo(inbound_json, activity, obj)
+
 
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
@@ -217,6 +244,10 @@ def new_ob_object(inbound_json, activity, obj):
     # flsuh to db to generate ID needed for assigning generic attributes
     db.session.add(base_activity)
     db.session.flush()
+
+    #set object
+    if base_object is not None:
+        base_activity.set_object(base_object)
 
     #set the actor and external id
     base_activity.external_id = activity['id']
