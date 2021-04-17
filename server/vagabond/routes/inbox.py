@@ -147,7 +147,29 @@ def handle_tags(base_activity, base_object, activity, obj):
         HELPER FUNCTIONS - OTHER
     =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 '''
+def handle_undo(inbound_json, activity, obj):
+    print(json.dumps(inbound_json))
+    if obj['type'] == 'Follow':
 
+        leader = APObject.get_object_from_url(obj['object'])
+        if leader is None or not isinstance(leader, Actor):
+            return error('Actor not found.', 404)
+
+        follow_activity = db.session.query(Follow).filter(Follow.external_id == obj['id']).first()
+        if follow_activity is None:
+            return error('Cannot undo follow activity: follow not found.', 404)
+
+        followed_by = db.session.query(FollowedBy).filter(FollowedBy.follower == inbound_json['actor']).filter(FollowedBy.leader_id == leader.id).first()
+        if followed_by is None:
+            return error('Cannot undo follow activity: follow not found.', 404)
+
+        db.session.delete(follow_activity)
+        db.session.delete(followed_by)
+        db.session.commit()
+
+        return make_response('', 200)
+        
+        
 
 def new_ob_object(inbound_json, activity, obj):
     '''
@@ -205,28 +227,14 @@ def new_ob_object(inbound_json, activity, obj):
 
         deleted_object = db.session.query(APObject).filter(APObject.external_id == deleted_object_external_id).first()
         if deleted_object is not None:
-            deleted_object.content = 'Message erased.'
+            deleted_object.content = 'Message erased'
+
         else:
             return error('Cannot delete object: object not found', 404)
+
     elif activity['type'] == 'Undo':
-        '''
-        Currently just removes entries from the followed_by table since
-        that is that table is seperate from the AP_object table and activity table
-        '''
-        base_activity = Undo()
-        api_url = config['api_url']
+        return handle_undo(inbound_json, activity, obj)
 
-        undo_object = resolve_ap_object(obj)
-
-        if undo_object['type'] == 'Follow':
-            local_actor = resolve_ap_object(undo_object['object'])
-            local_actor_name = local_actor['id'].replace(f'{api_url}/actors/', '')
-            ex_leader = db.session.query(Actor.id).filter(Actor.username == local_actor_name)
-            to_be_deleted = db.session.query(FollowedBy).filter(db.and_(FollowedBy.leader_id == ex_leader, FollowedBy.follower == undo_object['actor']))
-            to_be_deleted.delete(synchronize_session=False)
-            db.session.commit()
-        else: 
-            return error ('Cannot undo this type of activity', 400)
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           
@@ -235,6 +243,10 @@ def new_ob_object(inbound_json, activity, obj):
     # flsuh to db to generate ID needed for assigning generic attributes
     db.session.add(base_activity)
     db.session.flush()
+
+    #set object
+    if base_object is not None:
+        base_activity.set_object(base_object)
 
     #set the actor and external id
     base_activity.external_id = activity['id']
