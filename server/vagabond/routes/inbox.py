@@ -8,7 +8,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject, Like, Delete
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject, Like, Delete, Undo
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse as parse_date
@@ -234,7 +234,6 @@ def new_ob_object(inbound_json, activity, obj):
 
     elif activity['type'] == 'Undo':
         return handle_undo(inbound_json, activity, obj)
-
 
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
