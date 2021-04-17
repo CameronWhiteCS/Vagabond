@@ -10,10 +10,12 @@ from flask import make_response, request, session, jsonify
 from cerberus import Validator
 
 from vagabond.__main__ import app, db
-from vagabond.models import User, Actor, Notification
+from vagabond.models import User, Actor, Notification, Follow, Following
 from vagabond.config import config
 from vagabond.util import resolve_ap_object
 
+
+from uuid import uuid4
 
 '''
 @app.before_request
@@ -227,4 +229,42 @@ def route_notifications(user):
             db.session.commit()
             return make_response('', 200)
 
+@app.route('/api/v1/unfollow', methods=['POST'])
+@require_signin
+def route_undo_follow(user):
 
+    from vagabond.crypto import signed_request
+
+    follower = user.primary_actor
+    leader = resolve_ap_object(request.get_json()['leader'])
+
+    follow_activity = db.session.query(Follow).filter(Follow.internal_actor_id == follower.id, Follow.external_object_id == leader['id']).first()
+    if follow_activity is None:
+        print('@@@@@@@@@@@@@@@@@@@@@@@')
+        return error('It doesn''t appear that you follow that user :thonking:', 404)
+
+    following = db.session.query(Following).filter(Following.leader == leader['id']).filter(Following.follower_id == follower.id).first()
+    if following is None:
+        return error('It doesn''t appear that you follow that user :thonking:', 404)
+
+    api_url = config['api_url']
+    uuid = uuid4()
+
+    signed_request(follower, {
+        '@context': 'https://www.w3.org/ns/activitystreams',
+        'type': 'Undo',
+        'id': f'{api_url}/unfollowActivity/{uuid}',
+        'actor': follower.to_dict()['id'],
+        'object': {
+            'type': 'Follow',
+            'actor': follower.to_dict()['id'],
+            'object': leader['id'],
+            'id': follow_activity.to_dict()['id']
+        }
+    }, leader['inbox'])
+
+    db.session.delete(follow_activity)
+    db.session.delete(following)
+    db.session.commit()
+
+    return make_response('', 200)

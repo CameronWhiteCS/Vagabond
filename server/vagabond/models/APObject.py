@@ -156,12 +156,12 @@ class APObject(db.Model):
             output['id'] = f'{api_url}/objects/{self.id}'
 
         #inReplyTo - what this object is in reply to
-        if self.in_reply_to_external_id is not None:
-            output['inReplyTo'] = self.in_reply_to_external_id
-        elif self.in_reply_to_internal_id is not None:
+        if self.in_reply_to_internal_id is not None:
             in_reply_to = db.session.query(APObject).get(self.in_reply_to_internal_id)
             if in_reply_to is not None:
-                output['inReplyTo'] = in_reply_to.to_dict()['id']
+                output['inReplyTo'] = in_reply_to.to_dict()
+        elif self.in_reply_to_external_id is not None:
+            output['inReplyTo'] = self.in_reply_to_external_id
 
         #inReplyTo - what objects are a reply to this one
         if self.type == APObjectType.NOTE and self.id is not None:
@@ -242,15 +242,21 @@ class APObject(db.Model):
         '''
         keys = ['to', 'bto', 'cc', 'bcc']
         for key in keys:
-            value = obj.get(key)
-            if value is not None:
-                if isinstance(value, str):
-                    value = [value]
-                elif isinstance(value, list) is not True:
+            recipients = obj.get(key)
+            if recipients is not None:
+                if isinstance(recipients, str):
+                    recipients = [recipients]
+                elif isinstance(recipients, list) is not True:
                     raise Exception(f'APObject#add_all_recipients method given an object whose {key} value was neither a string nor an array.')
                 
-                for _value in value:
-                    self.add_recipient(key, _value)
+                #prevent duplicate entries
+                uniques = []
+                for recipient in recipients:
+                    if recipients not in uniques:
+                        uniques.append(recipient)
+
+                for recipient in uniques:
+                    self.add_recipient(key, recipient)
 
 
     def attribute_to(self, author):

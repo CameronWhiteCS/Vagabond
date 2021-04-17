@@ -6,7 +6,7 @@ const InboxViewer = () => {
 
     const render = (item) => {
         if (item.type === 'Create') {
-            return <Note activity={item} key={item.id} />
+            return <Note note={item.object} key={item.id} />
         }
     }
 

@@ -17,8 +17,9 @@ import { ReactComponent as Archive } from 'icon/archive.svg'
 import { ReactComponent as Navigation } from 'icon/navigation.svg'
 
 /**
- * props
- * - props.inReplyTo = Note object being replied to
+ * @param {*} props
+ * @param {Note=} props.inReplyTo - Optional note that will be used to set the inReplyTo field when posting a Note
+ * @returns 
  */
 const ComposeNote = (props) => {
 

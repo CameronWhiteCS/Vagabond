@@ -15,7 +15,9 @@ from vagabond.models import Actor, APObject, APObjectType, Following, Activity, 
 from vagabond.routes import error, require_signin
 from vagabond.config import config
 from vagabond.crypto import signed_request
-from vagabond.util import resolve_ap_object
+from vagabond.util import resolve_ap_object, xsd_datetime
+
+import datetime
 
 import json
 
@@ -283,6 +285,7 @@ def handle_follow(inbound_json, actor, base_activity, base_object, is_local):
         db.session.add(Notification(
             local_leader, f'{actor_dict["preferredUsername"]} has followed you.', 'Follow'))
         db.session.add(new_followed_by)
+        db.session.commit()
     else:
         db.session.commit()  # This is required so when we get an Accept activity back before the end of this request, we're able to find the Follow activity
         try:
@@ -312,7 +315,6 @@ def handle_undo(inbound_json, actor):
 
     if undone_activity.internal_actor_id != actor.id:
         return error('You cannot undo activities performed by other actors.')
-
 
     if isinstance(undone_activity, Follow):
         pass
@@ -407,18 +409,19 @@ def post_outbox_c2s(actor_name, user=None):
                 if existing_like_count > 1:
                     return error('You already like that object.')
 
-    elif inbound_json['type'] == 'Delete':
-        err_response = handle_delete(inbound_json, actor)
-        if err_response is not None:
-            return err_response
-
     # We have to generate the message delivery text because
     # The delete activity disrupts the to_dict function
     # by preventing the 'id' property of the dictionary
     # from being generated. This confuses recieving servers.
+
     delivery_message = base_activity.to_dict()
 
-    if inbound_json['type'] == 'Undo':
+    if inbound_json['type'] == 'Delete':
+        err_response = handle_delete(inbound_json, actor)
+        if err_response is not None:
+            return err_response
+
+    elif inbound_json['type'] == 'Undo':
         err_response = handle_undo(inbound_json, actor)
         if err_response is not None:
             return err_response

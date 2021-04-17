@@ -8,7 +8,7 @@ from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
 from vagabond.config import config
-from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject, Like
+from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject, Like, Delete, Undo
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse as parse_date
@@ -19,11 +19,15 @@ from dateutil.parser import parse as parse_date
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 '''
 
-def handle_inbound_accept_reject(actor, activity, obj):
+def handle_inbound_accept_reject(activity, obj):
     '''
         Incoming Accept and Reject activites on Follow objects
         have side effects which are handled here
     '''
+
+    actor = APObject.get_object_from_url(obj['actor']) #actor on local server who is following external actor
+    if not isinstance(actor, Actor):
+        raise Exception('Remote server tried to accept or reject a Follow request done by an object and not by an actor. Aborting.')
 
     following = db.session.query(Following).filter(db.and_(
         Following.follower_id == actor.id,
@@ -143,16 +147,36 @@ def handle_tags(base_activity, base_object, activity, obj):
         HELPER FUNCTIONS - OTHER
     =-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 '''
+def handle_undo(inbound_json, activity, obj):
+    print(json.dumps(inbound_json))
+    if obj['type'] == 'Follow':
 
+        leader = APObject.get_object_from_url(obj['object'])
+        if leader is None or not isinstance(leader, Actor):
+            return error('Actor not found.', 404)
 
-def new_ob_object(activity, obj, recipient=None, actor=None):
+        follow_activity = db.session.query(Follow).filter(Follow.external_id == obj['id']).first()
+        if follow_activity is None:
+            return error('Cannot undo follow activity: follow not found.', 404)
+
+        followed_by = db.session.query(FollowedBy).filter(FollowedBy.follower == inbound_json['actor']).filter(FollowedBy.leader_id == leader.id).first()
+        if followed_by is None:
+            return error('Cannot undo follow activity: follow not found.', 404)
+
+        db.session.delete(follow_activity)
+        db.session.delete(followed_by)
+        db.session.commit()
+
+        return make_response('', 200)
+        
+        
+
+def new_ob_object(inbound_json, activity, obj):
     '''
         activity: dict
             The activity being preformed
         obj: dict
             The object the activity is being done on
-        ?recipient: Actor
-            the actor whose inbox this activity was POSTed to
 
         Returns: Flask Response object
 
@@ -173,14 +197,17 @@ def new_ob_object(activity, obj, recipient=None, actor=None):
 
     if activity['type'] == 'Create':
         base_activity = Create()
+        if obj['type'] == 'Note':
+            base_object = APObject()
+            base_object.type = APObjectType.NOTE
     elif activity['type'] == 'Like':
         base_activity = Like()
-    elif (activity['type'] == 'Accept' or activity['type'] == 'Reject') and obj['type'] == 'Follow' and recipient is not None:
+    elif (activity['type'] == 'Accept' or activity['type'] == 'Reject') and obj['type'] == 'Follow':
         if activity['type'] == 'Accept':
             base_activity = Accept()
         if activity['type'] == 'Reject':
             base_activity = Reject()
-        err_response = handle_inbound_accept_reject(recipient, activity, obj)
+        err_response = handle_inbound_accept_reject(activity, obj)
         if err_response is not None:
             return err_response
     elif activity['type'] == 'Follow':
@@ -188,17 +215,38 @@ def new_ob_object(activity, obj, recipient=None, actor=None):
         err_response = handle_inbound_follow(activity, obj)
         if err_response is not None:
             return err_response
+    elif activity['type'] == 'Delete':
+
+        base_activity = Delete()
+        deleted_object_external_id = None
+
+        if isinstance(inbound_json['object'], dict):
+            deleted_object_external_id = inbound_json['object']['id']
+        else:
+            deleted_object_external_id = inbound_json['object']
+
+        deleted_object = db.session.query(APObject).filter(APObject.external_id == deleted_object_external_id).first()
+        if deleted_object is not None:
+            deleted_object.content = 'Message erased'
+
+        else:
+            return error('Cannot delete object: object not found', 404)
+
+    elif activity['type'] == 'Undo':
+        return handle_undo(inbound_json, activity, obj)
+
     else:
         return error('Invalid request. That activity type may not supported by Vagabond.', 400)
           
-
-    if obj['type'] == 'Note':
-        base_object = APObject()
-        base_object.type = APObjectType.NOTE
+        
 
     # flsuh to db to generate ID needed for assigning generic attributes
     db.session.add(base_activity)
     db.session.flush()
+
+    #set object
+    if base_object is not None:
+        base_activity.set_object(base_object)
 
     #set the actor and external id
     base_activity.external_id = activity['id']
@@ -391,7 +439,7 @@ def route_actor_inbox(actor_name):
 
         obj = resolve_ap_object(request.get_json().get('object'))
 
-        return new_ob_object(activity, obj, recipient)
+        return new_ob_object(request.get_json(), activity, obj)
 
     elif request.method == 'GET':
         return get_actor_inbox(actor_name=actor_name)
@@ -423,7 +471,7 @@ def route_shared_inbox():
         activity = request.get_json()
         obj = resolve_ap_object(activity['object'])
 
-        return new_ob_object(activity, obj)
+        return new_ob_object(request.get_json(), activity, obj)
 
 
 @app.route('/api/v1/inbox/<int:page>')
