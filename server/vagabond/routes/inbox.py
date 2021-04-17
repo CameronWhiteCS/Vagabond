@@ -215,7 +215,6 @@ def new_ob_object(inbound_json, activity, obj):
         '''
         base_activity = Undo()
         api_url = config['api_url']
-        app.logger.error('\n\n\n\n\n\n\nUndo Request was revieved')
 
         undo_object = resolve_ap_object(obj)
 
