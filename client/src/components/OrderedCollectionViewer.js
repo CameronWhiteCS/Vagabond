@@ -2,6 +2,8 @@ import axios from 'axios';
 import { useState, useEffect } from 'react';
 import {addLoadingReason, handleError, removeLoadingReason, store} from 'reducer/reducer.js';
 import {Button} from 'react-bootstrap';
+import { ReactComponent as NotFound } from 'icon/404.svg';
+
 
 /**
  * props:
@@ -109,9 +111,11 @@ const OrderedCollectionViewer = (props) => {
 
     const EmptyCollection = () => {
         return (
-            <p>
-                There don't appear to be any items in the collection {`${props.id}`}.
-            </p>
+            <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+                <NotFound style={{width:'90%',margin:'20px 0 20px 0'}}/>
+                <p style={{color: 'white',textAlign:'center',margin:'30px 20px 30px 20px'}}>There don't appear to be any items in the collection {`${props.id}`}.</p>
+            </div>
+
         );
     }
 
@@ -122,7 +126,8 @@ const OrderedCollectionViewer = (props) => {
     /** Return different components depending on whether or not the person is signed or and if the data has been loaded. **/
     if(session.signedIn !== true) {
         return <SignedOut/>
-    } else if(collection?.items?.length >= 1) {
+    } 
+    else if(collection?.items?.length >= 1) {
         return (
             <>
                 {

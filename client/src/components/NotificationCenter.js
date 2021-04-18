@@ -8,6 +8,8 @@ import { ReactComponent as Heart } from 'icon/heart.svg';
 import { ReactComponent as ThumbsDown } from 'icon/thumbs-down.svg';
 import { ReactComponent as MessageSquare } from 'icon/message-square.svg';
 import { ReactComponent as AtSign } from 'icon/at-sign.svg';
+import { ReactComponent as NotFound } from 'icon/404.svg';
+
 
 import { store, handleError, addLoadingReason, removeLoadingReason } from "reducer/reducer";
 
@@ -166,11 +168,21 @@ const NotificationCenter = () => {
             <h1>Notifications</h1>
             <SelectView />
             <div style={{ width: '90%', margin: '0 auto 0 auto' }}>
-                {showInteractions && interactions.length === 0 && <p style={{color: 'white'}}>No interactions found.</p>}
+                {showInteractions && interactions.length === 0 && 
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+                        <NotFound style={{width:'90%',margin:'20px 0 20px 0'}}/>
+                        <p style={{color: 'white',textAlign:'center',margin:'30px 0 30px 0'}}>No interactions found.</p>
+                    </div>
+                }
                 {showInteractions && interactions.length > 0 && interactions.map(notification => <Interaction notification={notification} />)}
-                {!showInteractions && mentions.length === 0 && <p style={{color: 'white'}}>No mentions found.</p>}
+                {!showInteractions && mentions.length === 0 && 
+                    <div style={{display:'flex',flexDirection:'column',alignItems:'center'}}>
+                        <NotFound style={{width:'90%',margin:'20px 0 20px 0'}}/>
+                        <p style={{color: 'white',textAlign:'center',margin:'30px 0 30px 0'}}>No mentions found.</p>
+                    </div>
+                }
                 {!showInteractions && mentions.map(notification => <Mention notification={notification} />)}
-                <Button variant="danger" className="w-100" onClick={deleteAllNotifications}> Delete All</Button>
+                {interactions.length > 0 || mentions.length > 0 && <Button variant="danger" className="w-100" onClick={deleteAllNotifications}> Delete All</Button> }   
             </div>
         </>
     );

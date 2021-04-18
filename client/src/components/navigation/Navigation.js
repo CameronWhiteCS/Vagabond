@@ -54,7 +54,9 @@ const Navigation = () => {
         <div className="vagabond-navbar" style={{padding: '10px'}}>
             <span className="logoAndTitle" style={{width:'25%'}}>
                 <Logo style={{width:'35px', height:'35px', fill:'white', margin:'auto 10px auto 0'}}/>
-                <div id="vagabondTitle">Vagabond</div>
+                <Link to="/"  title="Inbox"  style={{margin:'0'}}>
+                    <div id="vagabondTitle">Vagabond</div>
+                </Link>
             </span>
             <div className={searching ? "bar-parent-searching" : ""}>
                 {
@@ -93,12 +95,6 @@ const Navigation = () => {
                     session.signedIn &&
                     <Link to="/notifications" title="Notifications">
                         <Bell className="icon" />
-                    </Link>
-                }
-                {
-                    session.signedIn &&
-                    <Link to="/actors" title="My actors">
-                        <Users className="icon" />
                     </Link>
                 }
                 {

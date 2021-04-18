@@ -24,7 +24,7 @@ const LikedViewer = () => {
     if(session.currentActor?.username !== undefined) {
         return (
             <>
-                <h1>Your Likes</h1>
+                <h1>My Likes</h1>
                 <OrderedCollectionViewer id={`/api/v1/actors/${session.currentActor.username}/liked`} render={render} />
             </>
         )

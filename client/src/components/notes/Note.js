@@ -23,12 +23,14 @@ import sanitizeHtml from 'sanitize-html';
  * @param {*} props
  * @param {Note} props.note - The ActivityStreams Note object being displayed by this component
  * @param {Like=} props.like - The Like activity associated with this object performed by the user. 
+
  * @returns 
  */
 const Note = (props) => {
 
     const [currentActor, setCurrentActor] = useState(store.getState().session.currentActor);
     const [invisible, setInvisible] = useState(false);
+    const [liked, setLiked] = useState(false);
 
     store.subscribe(() => {
         setCurrentActor(store.getState().session.currentActor);
@@ -41,6 +43,7 @@ const Note = (props) => {
 
     const handleLike = () => {
         const currentActor = store.getState().session.currentActor;
+
         axios.post(`/api/v1/actors/${currentActor.username}/outbox`, {
             ['@context']: 'https://www.w3.org/ns/activitystreams',
             type: 'Like',
@@ -48,10 +51,10 @@ const Note = (props) => {
             to: ['https://www.w3.org/ns/activitystreams#Public'],
             cc: [props.note.attributedTo, `${config.apiUrl}/actors/${currentActor.username}/followers`]
         })
-            .then((res) => {
-
-            })
-            .catch(handleError)
+        .then((res) => {
+            setLiked(true)
+        })
+        .catch(handleError)
     }
 
     const handleComment = () => {
@@ -127,7 +130,7 @@ const Note = (props) => {
         <div className="vagabond-tile note" style={{ padding: '15px' }}>
             <div className="pfp-container">
                 <img
-                    src="https://external-content.duckduckgo.com/iu/?u=https%3A%2F%2Ftse2.mm.bing.net%2Fth%3Fid%3DOIP.xetN7SHvp311jOFzMXpFZwHaHa%26pid%3DApi&f=1"
+                    src="https://i.ibb.co/dgh810w/Ellipse-6-2.png"
                     width="100%"
                     height="auto"
                     style={{ borderRadius: '50%' }}
@@ -147,7 +150,7 @@ const Note = (props) => {
                     {
                         props.like === undefined &&
                         <div style={style}>
-                            <Heart onClick={handleLike} className="note-icon" />
+                            <Heart style={liked ? {fill:'red'} : {fill:'white'}} onClick={handleLike} className="note-icon" />
                         </div>
                     }
                     {

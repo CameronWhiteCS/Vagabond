@@ -19,6 +19,8 @@ import { ReactComponent as Navigation } from 'icon/navigation.svg'
 /**
  * @param {*} props
  * @param {Note=} props.inReplyTo - Optional note that will be used to set the inReplyTo field when posting a Note
+ * @param {Cancel=} props.like - Wheter to show the X button or not
+
  * @returns 
  */
 const ComposeNote = (props) => {
@@ -169,10 +171,12 @@ const ComposeNote = (props) => {
                     </TextArea>
                 </div>
                 <div className="icon-bar-vertical" style={{ justifyContent: 'flex-start' }}>
-                    <button id="close" onClick={handleClose}>X</button>
+                    {   props.cancel  &&
+                        <button id="close" onClick={handleClose}>X</button>
+                    }
                 </div>
             </div>
-            <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', margin: '0 auto 0 auto' }}>
+            <div style={{ width: '100%', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', margin: '10px auto 0 auto' }}>
                 <Button disabled={formik.values.content.length > 1024} style={{ height: '40px', width: '50%', margin: '10px 10px 10px 10px', display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center' }} variant="secondary">
                     <Archive style={{ heigh: '18px', width: '18px' }} className="subIconSecondary" />
                     <div style={{ marginLeft: '10px' }}>Draft</div>
