@@ -3,18 +3,20 @@ import React from 'react';
 const ViewActors = (props) => {
 
     return (
-
         <>
-            <h1>Your Actors</h1>
-            <hr />
+            <h1>My Actors</h1>
             {
                 props.actors.map(
                     (actor, index) =>
                         <>
-                            <code>{JSON.stringify(actor, null, 2)}</code>
-                            <br />
-                            <br />
-                            <br />
+                            <div className="user-on-list" style={{height:"90px"}}>
+                                <div id="user-url">
+                                    Username: {JSON.stringify(actor.username, null, 2).replace(/\"/g,"")}
+                                    <br/>
+                                    Preferred Name: {JSON.stringify(actor.preferredUsername, null, 2).replace(/\"/g,"")}
+                                </div>
+                                <button style={{backgroundColor:'lightGray'}} className="unfollow">Current</button>
+                            </div> 
                         </>
                 )
             }

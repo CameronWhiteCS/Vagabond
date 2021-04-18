@@ -42,7 +42,7 @@ const LeftBar = (props) => {
     };
 
     const styleButtonInvisible = {
-        fontSize: '25px',
+        fontSize: '18px',
         background: 'white'
     };
 
@@ -66,9 +66,9 @@ const LeftBar = (props) => {
                 {
                     visible &&
                     <div id="leftBar" className="bar" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'flex-start', alignItems: 'center' }}>
-                        <div id="profile-pic" style={{ backgroundImage: 'url(\"https://i.stack.imgur.com/l60Hf.png\")' }}></div>
+                        <div className="profile-pic" style={{ backgroundImage: 'url(\"https://i.ibb.co/dgh810w/Ellipse-6-2.png\")' }}></div>
                         <h1 className="dark">{session.currentActor?.username}</h1>
-                        <div id="counts-parent" style={{ display: 'flex', justifyContent: 'space-around', width: '80%', marginTop: '10px' }}>
+                        <div id="counts-parent" style={{ display: 'flex', justifyContent: 'space-around', width: '80%' }}>
                             <div id="following-parent" style={{ display: 'flex', alignItems: 'center', flexDirection: 'column' }}>
                                 <Link to="/following"><h1 className="dark">{following}</h1></Link>
                                 <div>Following</div>
@@ -77,6 +77,12 @@ const LeftBar = (props) => {
                                 <Link to="/followers"><h1 className="dark">{followers}</h1></Link>
                                 <div>Followers</div>
                             </div>
+                        </div>
+                        <br/>
+                        <div style={{width:'100%',paddingLeft:'95px'}}>
+                            <Link to="/actors"><h1 className="dark" style={{fontSize:'22px',margin:'0'}}>My Actors</h1></Link>
+                            <Link to="/liked"><h1 className="dark" style={{fontSize:'22px',margin:'0'}}>My Likes</h1></Link>
+                            <Link to="/settings"><h1 className="dark" style={{fontSize:'22px',margin:'0'}}>Settings</h1></Link>
                         </div>
                     </div>
                 }

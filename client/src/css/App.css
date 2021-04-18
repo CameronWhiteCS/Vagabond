@@ -1,9 +1,25 @@
+.profile-pic {
+  width: 200px;
+  height: 200px;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border-radius: 50%;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
+}
+
 a {
   text-decoration: none !important;
+  color: #6c757d;
 }
 
 body {
   background-color: #454545;
+}
+
+textarea {
+  font-size: 15px !important;
+  font-weight: 300 !important;
 }
 
 .icon-bar-horizontal-searching {
@@ -244,6 +260,7 @@ body {
 h1 {
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
+  font-size: 30px;
   color: white;
   margin-left: 5%;
   padding-top: 40px;
@@ -292,15 +309,6 @@ div.vagabond-navbar svg.icon {
   flex-direction: column;
   width: 30%;
   transition: visibility 1s ease-in-out;
-}
-#sidebar-left #profile-pic, #sidebar-right #profile-pic {
-  width: 200px;
-  height: 200px;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  border-radius: 50%;
-  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.25);
 }
 
 #container-center {
@@ -441,6 +449,7 @@ div.vagabond-navbar svg.icon {
 }
 #compose-note-modal .compose-note .textarea-container {
   flex: 1;
+  font-size: 15px;
 }
 #compose-note-modal .buttons {
   flex: 1;
@@ -484,19 +493,20 @@ div.vagabond-navbar svg.icon {
   align-items: center;
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
-  font-size: 18px;
+  font-size: 15px;
   color: white;
   border-style: none;
   height: 46%;
 }
 #compose-note .draft {
   border-radius: 12px;
+  border-color: white;
   display: flex;
   flex-direction: row;
   background-color: white;
   font-family: "Kumbh Sans", sans-serif;
   font-weight: 450;
-  font-size: 18px;
+  font-size: 15px;
   color: #454545;
   padding-left: 5px;
   align-items: center;
@@ -543,7 +553,7 @@ div.vagabond-navbar svg.icon {
 .note {
   display: flex;
   flex-direction: row;
-  margin: 16px auto 16px auto;
+  margin: 16px auto 0 auto;
   border: 0px !important;
   border-style: none !important;
   background-color: white;
@@ -557,12 +567,14 @@ div.vagabond-navbar svg.icon {
 .note .content-container {
   margin: 0px 15px 0px 15px;
   word-wrap: anywhere;
+  color: #454545;
   width: 100%;
 }
 .note .content-container .user-and-time {
   display: flex;
-  height: 20px;
   align-items: baseline;
+  overflow-x: scroll;
+  flex-direction: column;
 }
 .note .content-container .user-and-time .handle {
   font-weight: bold;
@@ -570,25 +582,23 @@ div.vagabond-navbar svg.icon {
 }
 .note .content-container .user-and-time .time {
   display: flex;
-  margin-left: 8px;
-  color: #495057;
+  color: #6c757d;
   font-size: 13px;
   overflow-x: scroll;
 }
 .note .content-container .note-content {
+  color: black;
   margin: 10px 0px 10px 0px !important;
 }
+.note .content-container .note-content h1, .note .content-container .note-content h2, .note .content-container .note-content h3, .note .content-container .note-content h4 {
+  margin: 0;
+  padding: 0;
+  color: black;
+}
 .note .content-container .note-content p {
+  margin: 0;
   font-size: 15px !important;
   font-weight: 300 !important;
-  color: black;
-  margin: 5px;
-  padding: 0px;
-}
-.note .content-container .note-content h1, .note .content-container .note-content h2, .note .content-container .note-content h3, .note .content-container .note-content h4, .note .content-container .note-content h5, .note .content-container .note-content h6 {
-  color: black;
-  margin: 5px;
-  padding: 0px;
 }
 .note .note-icon {
   width: 15px;

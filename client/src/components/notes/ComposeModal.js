@@ -18,7 +18,7 @@ const ComposeModal = () => {
         <>
             <Modal show={show}>
                 <Modal.Body style={{ margin: '0', width: '100%', padding: '10px', display: 'flex', flexDirection: 'column' }}>
-                    <ComposeNote />
+                    <ComposeNote cancel={true}/>
                 </Modal.Body>
             </Modal>
         </>
