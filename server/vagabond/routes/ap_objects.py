@@ -2,11 +2,12 @@ from flask import make_response, jsonify, request
 
 from vagabond.__main__ import app, db
 from vagabond.models import APObjectType, APObject, Actor
-from vagabond.config import config
 from vagabond.util import xsd_datetime
 from vagabond.routes import error
 
 from math import ceil
+
+import os
 
 @app.route('/api/v1/objects/<int:object_id>')
 def route_get_object_by_id(object_id):
@@ -29,7 +30,7 @@ def route_get_object_replies_by_id(object_id):
     if ap_object is None:
         return error('Object not found', 404)
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
     items_per_page = 20
 
     #determine total items
@@ -82,7 +83,7 @@ def route_get_object_replies_by_id_paginated(object_id, page):
         total_items = total_items.filter(APObject.id <= max_id)
     total_items = total_items.count()
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
     items_per_page = 20
 
     base_query = db.session.query(APObject).filter(APObject.in_reply_to_internal_id == object_id)

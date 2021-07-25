@@ -9,9 +9,8 @@ from base64 import b64decode, b64encode
 from vagabond.__main__ import app
 from vagabond.util import resolve_ap_object
 from vagabond.routes import error
-from vagabond.config import config
 
-
+import os
 
 def parse_keypairs(raw_signature):
     '''
@@ -143,8 +142,8 @@ def require_signature(f):
             return error('Authentication mechanism is missing or invalid: the "digest", "date", or "host" arguments were not included in the "headers" field of the "Signature" HTTP header')
 
         # Make sure the message is intended for us:
-        if request.headers['Host'] != config['domain']:
-            return error(f'Forged request: this message was originally intended for a recipient other than {config["domain"]}')
+        if request.headers['Host'] != os.environ['DOMAIN']:
+            return error(f'Forged request: this message was originally intended for a recipient other than {os.environ["DOMAIN"]}')
 
         # The HTTP signatures spec supports more than just SHA-256,
         # But for simplicity's sake we only support the most common

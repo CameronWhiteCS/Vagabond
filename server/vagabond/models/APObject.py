@@ -2,11 +2,12 @@ import enum
 
 from datetime import datetime
 from vagabond.__main__ import db
-from vagabond.config import config
 from vagabond.util import xsd_datetime
 import vagabond.models
 from vagabond.models import APObjectType
 
+
+import os
 
 class APObjectRecipient(db.Model):
     
@@ -93,7 +94,7 @@ class APObject(db.Model):
             This method works even for locally stored objects without an external_id property by parsing
             the provided URL and extracting the ID. 
         '''
-        api_url = config['api_url']
+        api_url = os.environ['API_URL']
         if url.replace(api_url, '') != url:
             url = url.replace(api_url, '')
             splits = url.split('/')
@@ -143,7 +144,7 @@ class APObject(db.Model):
 
     def to_dict(self):
 
-        api_url = config['api_url']
+        api_url = os.environ['API_URL']
 
         output = {
             '@context': ["https://www.w3.org/ns/activitystreams"],

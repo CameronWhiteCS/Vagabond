@@ -1,7 +1,8 @@
 from vagabond.__main__ import db
 from vagabond.models import APObject, APObjectType
-from vagabond.config import config
 from Crypto.PublicKey import RSA
+
+import os
 
 class Actor(APObject):
 
@@ -28,7 +29,7 @@ class Actor(APObject):
 
     def to_dict(self):
 
-        api_url = config['api_url']
+        api_url = os.environ['API_URL']
         username = self.username
         output = super().to_dict()
         
@@ -47,7 +48,7 @@ class Actor(APObject):
         output['publicKey'] = {
             'actor': f'{api_url}/actors/{username}',
             'id': f'{api_url}/actors/{username}#main-key',
-            'publicKeyPem': config['public_key']
+            'publicKeyPem': os.environ['PUBLIC_KEY']
         }
 
         return output

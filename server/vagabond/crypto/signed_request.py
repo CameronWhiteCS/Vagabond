@@ -8,12 +8,10 @@ from Crypto.Hash import SHA256
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
 
-from vagabond.__main__ import VERSION
-from vagabond.config import config
 
 import requests
-
 import json
+import os
 
 def get_http_datetime():
     now = datetime.now()
@@ -84,7 +82,7 @@ def signed_request(actor, body, url=None, host=None, request_target=None, method
 
     signing_string = generate_signing_string(actor, host, request_target, method, body, date, content_type)
 
-    private_key = RSA.importKey(config['private_key'])
+    private_key = RSA.importKey(os.environ['PRIVATE_KEY'])
     pkcs = pkcs1_15.new(private_key)
     
     sha256_body = SHA256.new(bytes(body, 'utf-8'))
@@ -95,10 +93,10 @@ def signed_request(actor, body, url=None, host=None, request_target=None, method
     sha256_signing_string = SHA256.new(bytes(signing_string, 'utf-8'))
     b64_sha256_signing_string = b64encode(pkcs.sign(sha256_signing_string)).decode('utf-8')
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     headers = {
-        'user-agent': f'Vagabond/{VERSION}',
+        'user-agent': 'Vagabond',
         'date': date,
         'digest': f'SHA-256={b64_digest_body}',
         'content-type': content_type,

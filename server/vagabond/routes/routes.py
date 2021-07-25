@@ -11,11 +11,12 @@ from cerberus import Validator
 
 from vagabond.__main__ import app, db
 from vagabond.models import User, Actor, Notification, Follow, Following
-from vagabond.config import config
 from vagabond.util import resolve_ap_object
 
 
 from uuid import uuid4
+
+import os
 
 '''
 @app.before_request
@@ -132,12 +133,12 @@ def route_webfinger():
             {
                 'rel': 'self',
                 'type': 'application/activity+json',
-                'href': f'{config["api_url"]}/actors/{actor.username}'
+                'href': f'{os.environ["API_URL"]}/actors/{actor.username}'
             },
             {
                 'rel': 'http://webfinger.net/rel/profile-page',
                 'type': 'text/html',
-                'href': f'https://{config["domain"]}/actors/{actor.username}'
+                'href': f'https://{os.environ["DOMAIN"]}/actors/{actor.username}'
             }
         ]
     }
@@ -247,7 +248,7 @@ def route_undo_follow(user):
     if following is None:
         return error('It doesn''t appear that you follow that user :thonking:', 404)
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
     uuid = uuid4()
 
     signed_request(follower, {
