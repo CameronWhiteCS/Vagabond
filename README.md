@@ -2,7 +2,7 @@
 
 <img src="https://raw.githubusercontent.com/CameronWhiteCS/Vagabond/3413faeb3e8cc08dee50a24766086c737ef68a56/client/src/img/Vagabond_Logo.svg" width="250">
 
-[Vagabond](https://www.teamvagabond.com) is a federated social network built using the ActivityPub protocol that prioritizes user privacy, security, and autonomy. Vagabond is [free and open source software](https://www.gnu.org/licenses/gpl-3.0.en.html) under the GPLv3 license.  
+[Vagabond](https://www.teamvagabond.com) is a federated (peer-to-peer) social network built using the [ActivityPub](https://activitypub.rocks/) protocol that prioritizes user privacy, security, and autonomy. Vagabond is [free and open source software](https://www.gnu.org/licenses/gpl-3.0.en.html) under the GPLv3 license.  
 
 ## Live Demo
 
@@ -14,10 +14,8 @@ To try out Vagabond without having to create your own instance, please visit the
 * Multiple profiles per account
 * Interoperability with Mastodon, the largest ActivityPub instance
 
-## Automatic Deployment - Ubuntu
+## Automatic Deployment and Updates - Ubuntu
 
-Vagabond comes with a number of useful scripts for automating project deployment and updates for Ubuntu. You can find these inside of the root directory of the repository.
+Vagabond comes with a number of scripts for automating project deployment and updates for Ubuntu. You can find these inside of the scripts folder.
 
-## Deployment Instructions - Other Operating Systems
-
-TODO
+These scripts may work on other Debian-based deistributions, but use them at your own risk. 

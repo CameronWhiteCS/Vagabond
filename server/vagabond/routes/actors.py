@@ -7,7 +7,9 @@ from vagabond.models import Actor, User, Following, FollowedBy, Like
 from vagabond.routes import require_signin
 from vagabond.crypto import require_signature
 from vagabond.routes import error
-from vagabond.config import config
+
+import os
+
 
 
 @app.route('/api/v1/actors/<username>')
@@ -40,11 +42,11 @@ def route_get_actor_following(username):
 
     return make_response({
         '@context': 'https://www.w3.org/ns/activitystreams',
-        'id': f'{config["api_url"]}/actors/{actor.username}/following',
+        'id': f'{os.environ["API_URL"]}/actors/{actor.username}/following',
         'type': 'OrderedCollection',
         'totalItems': total_items,
-        'first': f'{config["api_url"]}/actors/{actor.username}/following/1',
-        'last': f'{config["api_url"]}/actors/{actor.username}/following/{last_page}'
+        'first': f'{os.environ["API_URL"]}/actors/{actor.username}/following/1',
+        'last': f'{os.environ["API_URL"]}/actors/{actor.username}/following/{last_page}'
     }, 200)
 
 
@@ -63,7 +65,7 @@ def route_get_actor_following_page(username, page):
     for item in items:
         ordered_items.append(item.leader)
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
@@ -100,11 +102,11 @@ def route_get_actor_followers(username):
 
     return make_response({
         '@context': 'https://www.w3.org/ns/activitystreams',
-        'id': f'{config["api_url"]}/actors/{actor.username}/followers',
+        'id': f'{os.environ["API_URL"]}/actors/{actor.username}/followers',
         'type': 'OrderedCollection',
         'totalItems': total_items,
-        'first': f'{config["api_url"]}/actors/{actor.username}/followers/1',
-        'last': f'{config["api_url"]}/actors/{actor.username}/followers/{last_page}'
+        'first': f'{os.environ["API_URL"]}/actors/{actor.username}/followers/1',
+        'last': f'{os.environ["API_URL"]}/actors/{actor.username}/followers/{last_page}'
     }, 200)
 
 
@@ -123,7 +125,7 @@ def route_get_actor_followers_page(username, page):
     for item in items:
         ordered_items.append(item.follower)
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
@@ -161,7 +163,7 @@ def route_get_liked_collection(actor_name):
 
     max_page = ceil(total_items / items_per_page)
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',
@@ -198,7 +200,7 @@ def route_get_liked_collection_paginated(actor_name, page):
     if max_id is not None:
         base_query = base_query.filter(Like.id <= max_id)
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',

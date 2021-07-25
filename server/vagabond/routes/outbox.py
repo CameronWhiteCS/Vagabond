@@ -13,12 +13,11 @@ from dateutil.parser import parse
 from vagabond.__main__ import app, db
 from vagabond.models import Actor, APObject, APObjectType, Following, Activity, Create, Follow, FollowedBy, Like, Notification, Note, Undo, Delete
 from vagabond.routes import error, require_signin
-from vagabond.config import config
 from vagabond.crypto import signed_request
 from vagabond.util import resolve_ap_object, xsd_datetime
 
 import datetime
-
+import os
 import json
 
 '''
@@ -32,7 +31,7 @@ def deliver(actor, message):
         Delivers the specified message to the recipients listed in the to, bto, cc, and bcc fields. 
     '''
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     keys = ['to', 'bto', 'cc', 'bcc']
     recipients = []
@@ -126,7 +125,7 @@ def deliver(actor, message):
             
     for inbox in all_inboxes:
         # Don't deliver messages to ourselves!
-        if inbox.replace(config['api_url'], '') == inbox:
+        if inbox.replace(os.environ['API_URL'], '') == inbox:
             try:
                 signed_request(actor, message, url=inbox)
             except Exception as e:
@@ -238,7 +237,7 @@ def determine_if_local(activity):
         that originated on this server. Used mainly for the special
         handling of the Follow activity. Returns false otherwise.
     '''
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
     output = False
     if 'object' in activity:
         if isinstance(activity['object'], dict) and 'id' in activity['object']:
@@ -276,7 +275,7 @@ def handle_follow(inbound_json, actor, base_activity, base_object, is_local):
         # resulting from uncomitted database transactions and be a waste of resources.
     if is_local:
         local_leader = db.session.query(Actor).filter(db.func.lower(Actor.username) == db.func.lower(
-            inbound_json['object'].replace(f'{config["api_url"]}/actors/', ''))).first()
+            inbound_json['object'].replace(f'{os.environ["API_URL"]}/actors/', ''))).first()
         if local_leader is None:
             return make_response('Actor not found', 404)
         actor_dict = actor.to_dict()
@@ -463,7 +462,7 @@ def route_user_outbox_paginated(actor_name, page):
 
     # Variables
     total_items = db.session.query(Activity).filter(Activity.internal_actor_id == actor.id).count()
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
     items_per_page = 20
     max_id = None
     if 'maxId' in request.args:
@@ -535,7 +534,7 @@ def get_outbox(username):
         max_id = max_id_object.id
 
     max_page = ceil(total_items / items_per_page)
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     output = {
         '@context': 'https://www.w3.org/ns/activitystreams',

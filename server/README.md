@@ -1,14 +1,14 @@
 # Vagabond Server
 
-## Libraries, Frameworks, & Utilities
+## Environment Variables
 
-* [Flask](https://flask.palletsprojects.com/en/1.1.x/)
-* [Flask-SQLAlchemy](https://flask-sqlalchemy.palletsprojects.com/en/2.x/)
-* [Flask-Limiter](https://flask-limiter.readthedocs.io/en/stable/)
-* [BCrypt](https://pypi.org/project/bcrypt/)
+MYSQL_SERVER (egL 127.0.0.1)
+MYSQL_USER
+MYSQL_PASSWORD
+MYSQL_PORT
+MYSQL_DATABASE
+DOMAIN (eg: diego.teamvagabond.com)
+API_URL (eg: https://diego.teamvagabond.com/api/v1)
 
-## Core Team
-
-* Gerrad
-* Jay
-* Cameron
+PUBLIC_KEY ("-----BEGIN PUBLIC KEY-----" format, newlines started via \n character)
+PRIVATE_KEY ("-----BEGIN RSA PRIVATE KEY-----" format, newlines started via \n character)

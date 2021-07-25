@@ -1,6 +1,5 @@
 from vagabond.__main__ import db
 from vagabond.models import APObject, APObjectType, Actor
-from vagabond.config import config
 
 class Activity(APObject):
 

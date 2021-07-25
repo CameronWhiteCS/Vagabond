@@ -7,11 +7,13 @@ from flask import request, make_response
 from vagabond.routes import error, require_signin
 from vagabond.__main__ import app, db
 from vagabond.crypto import require_signature, signed_request
-from vagabond.config import config
 from vagabond.models import Actor, Activity, Following, FollowedBy, Follow, APObject, APObjectRecipient, Create, APObjectType, Notification, Accept, Reject, Like, Delete, Undo
 from vagabond.util import resolve_ap_object
 
 from dateutil.parser import parse as parse_date
+
+import os
+
 
 '''
     -=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
@@ -58,7 +60,7 @@ def handle_inbound_follow(activity, obj):
         Returns: Flask response if an error occurs, None otherwise
     '''
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     if obj['id'].find(f'{api_url}/actors/') < 0:
         return error('Invalid actor ID')
@@ -123,7 +125,7 @@ def handle_tags(base_activity, base_object, activity, obj):
     def notify(tag):
         if 'name' in tag:
             splits = tag['name'].split('@')
-            if len(splits) == 3 and splits[2].lower() == config['domain'].lower():
+            if len(splits) == 3 and splits[2].lower() == os.environ['DOMAIN'].lower():
                 name = splits[1]
                 actor = db.session.query(Actor).filter(db.func.lower(name) == db.func.lower(Actor.username)).first()
                 if actor is not None:
@@ -303,7 +305,7 @@ def get_inbox(personalized, user=None):
 
     actor = user.primary_actor
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     # Figure out who the actor is following and put that into a list
     # Do another query for all isntances of APObjectRecipient where the recipiet is contained inside he previously generated list
@@ -372,7 +374,7 @@ def get_inbox_paginated(actor, page, personalized):
 
         ordered_items.append(appended)
 
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
 
     root_url = None
     if personalized:

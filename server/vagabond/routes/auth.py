@@ -9,11 +9,12 @@ import bcrypt
 from vagabond.__main__ import app, db
 from vagabond.models import User, Actor
 from vagabond.routes import error, validate, require_signin
-from vagabond.config import config
 from vagabond.regex import ACTOR_NAME, USERNAME, PASSWORD
 
+import os
+
 def get_session_data(user):
-    api_url = config['api_url']
+    api_url = os.environ['API_URL']
         
     output = {
         'actors': [],
