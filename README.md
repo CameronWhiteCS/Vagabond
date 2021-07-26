@@ -1,7 +1,5 @@
 # Vagabond
 
-<img src="https://raw.githubusercontent.com/CameronWhiteCS/Vagabond/3413faeb3e8cc08dee50a24766086c737ef68a56/client/src/img/Vagabond_Logo.svg" width="250">
-
 <img src="https://i.imgur.com/NsgD4BW.png">
 
 [Vagabond](https://www.teamvagabond.com) is a federated (peer-to-peer) social network built using the [ActivityPub](https://activitypub.rocks/) protocol that prioritizes user privacy, security, and autonomy. Vagabond is [free and open source software](https://www.gnu.org/licenses/gpl-3.0.en.html) under the GPLv3 license.  
