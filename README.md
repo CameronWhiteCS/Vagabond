@@ -8,7 +8,7 @@
 
 ## Live Demo
 
-To try out Vagabond without having to create your own instance, please visit the vagabond live demo at [https://cameronwhite.io/Vagabond](https://cameronwhite.io/Vagabond)
+To try out Vagabond without having to create your own instance, please visit the vagabond live demo at [https://vagabond.cameronwhite.io](https://vagabond.cameronwhite.io)
 
 ## Features
 
